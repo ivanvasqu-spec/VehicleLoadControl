@@ -1,52 +1,31 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# gradle.properties file to specify which files should be included.
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+-keep class com.vehicleloadcontrol.** { *; }
+-keep class com.vehicleloadcontrol.domain.model.** { *; }
+-keep class com.vehicleloadcontrol.data.** { *; }
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Hilt
+-keep class dagger.hilt.** { *; }
+-keep class com.google.dagger.** { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
-
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Room
+-keep class androidx.room.** { *; }
 
 # Retrofit
 -keepattributes Signature
 -keepattributes *Annotation*
--keep class com.squareup.okhttp3.** { *; }
--keep interface com.squareup.okhttp3.** { *; }
--dontwarn com.squareup.okhttp3.**
--dontwarn okhttp3.**
--dontwarn okio.**
-
-# Retrofit does reflection on generic types
--keepattributes Signature
--keepattributes *Annotation*
 -keep class retrofit2.** { *; }
--dontwarn retrofit2.**
+-keep class com.google.gson.** { *; }
 
-# Gson
--keepattributes EnclosingMethod
--keepattributes InnerClasses
--keep class com.google.gson.stream.** { *; }
--keepclassmembers enum * {
-    public static **[] values();
-    public static ** valueOf(java.lang.String);
-}
+# Kotlin
+-keep class kotlin.** { *; }
+-keep class kotlinx.coroutines.** { *; }
 
-# Room
--keep class * extends androidx.room.RoomDatabase
--dontwarn androidx.room.**
+# PDFBox
+-keep class com.tom_roush.pdfbox.** { *; }
+-keep class com.itextpdf.** { *; }
 
-# Hilt
--keep class dagger.hilt.** { *; }
--keep class * extends dagger.hilt.android.lifecycle.HiltViewModel
+# Apache POI
+-keep class org.apache.poi.** { *; }
+
+# Preserve line numbers for debugging
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
