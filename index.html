@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manifiesto · Control de Importación de Vehículos</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#0F3B3C">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Manifiesto">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --ink:#0F3B3C;
+    --ink-deep:#0A2829;
+    --brass:#C08A2E;
+    --brass-dark:#9C6E1E;
+    --paper:#EFE7D6;
+    --paper-line:#D9CDAE;
+    --rust:#8B3A2B;
+    --ok:#4C7A4E;
+    --text:#1C2422;
+    --text-dim:#5B6660;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--ink-deep);
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(192,138,46,0.08), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(192,138,46,0.06), transparent 40%);
+    font-family:'Inter',sans-serif;
+    color:var(--text);
+    min-height:100vh;
+    padding:32px 20px 80px;
+  }
+  .wrap{max-width:1100px;margin:0 auto;}
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:20px;
+    padding-bottom:20px;
+    border-bottom:2px solid var(--brass);
+    margin-bottom:28px;
+  }
+  .title-block h1{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:clamp(28px,4vw,42px);
+    color:var(--paper);
+    margin:0 0 4px;
+    letter-spacing:0.3px;
+  }
+  .title-block .sub{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--brass);
+  }
+  .stamp{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--paper);
+    border:1.5px solid var(--brass);
+    border-radius:4px;
+    padding:8px 14px;
+    line-height:1.6;
+    opacity:0.85;
+    white-space:nowrap;
+  }
+  .stamp b{color:var(--brass);}
+  .dropzone{
+    background:var(--paper);
+    border:2px dashed var(--brass-dark);
+    border-radius:10px;
+    padding:32px 24px;
+    text-align:center;
+    cursor:pointer;
+    transition:background 0.15s, border-color 0.15s;
+    margin-bottom:18px;
+  }
+  .dropzone:hover, .dropzone.drag{
+    background:#F5EFE0;
+    border-color:var(--brass);
+  }
+  .dropzone h3{
+    margin:0 0 6px;
+    font-family:'Fraunces',serif;
+    font-size:19px;
+    color:var(--ink);
+  }
+  .dropzone p{margin:0;color:var(--text-dim);font-size:13.5px;}
+  .dropzone input{display:none;}
+  #log{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--paper);
+    opacity:0.75;
+    margin:0 0 20px;
+    min-height:16px;
+  }
+  #log .err{color:#E39A8A;}
+  #log .ok{color:#9FCB9F;}
+  .toolbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:14px;
+  }
+  button{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    border:none;
+    border-radius:6px;
+    padding:10px 16px;
+    cursor:pointer;
+    transition:transform 0.1s, filter 0.15s;
+  }
+  button:active{transform:scale(0.97);}
+  .btn-primary{background:var(--brass);color:var(--ink-deep);}
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-primary:disabled{background:#6b6455;color:#a49f92;cursor:not-allowed;}
+  .btn-ghost{background:transparent;color:var(--paper);border:1px solid rgba(239,231,214,0.35);}
+  .btn-ghost:hover{border-color:var(--brass);color:var(--brass);}
+  .count-pill{
+    margin-left:auto;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--brass);
+    align-self:center;
+  }
+  .ledger{
+    background:var(--paper);
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 12px 30px rgba(0,0,0,0.35);
+  }
+  table{width:100%;border-collapse:collapse;}
+  thead th{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    text-align:left;
+    color:var(--paper);
+    background:var(--ink);
+    padding:12px 10px;
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:0;
+    border-bottom:1px solid var(--paper-line);
+    font-size:13.5px;
+  }
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:nth-child(even){background:rgba(0,0,0,0.02);}
+  td .cell-input{
+    width:100%;
+    border:none;
+    background:transparent;
+    padding:10px;
+    font-family:inherit;
+    font-size:13.5px;
+    color:var(--text);
+  }
+  td .cell-input:focus{
+    outline:2px solid var(--brass);
+    outline-offset:-2px;
+    background:#fff;
+  }
+  td.vin-cell .cell-input{font-family:'JetBrains Mono',monospace;font-size:12.5px;}
+  td.file-cell{color:var(--text-dim);font-size:11.5px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:10px;}
+  td.del-cell{text-align:center;padding:0 6px;}
+  td.del-cell button{
+    background:none;border:none;color:var(--rust);font-size:16px;cursor:pointer;padding:6px;line-height:1;
+  }
+  td.del-cell button:hover{color:#B5493A;}
+  .warn-badge{
+    display:inline-block;
+    font-family:'JetBrains Mono',monospace;
+    font-size:9.5px;
+    color:#fff;
+    background:var(--rust);
+    padding:1px 5px;
+    border-radius:3px;
+    margin-left:6px;
+    vertical-align:middle;
+  }
+  .empty-row td{
+    padding:36px 20px;
+    text-align:center;
+    color:var(--text-dim);
+    font-size:13.5px;
+    font-style:italic;
+  }
+  footer.note{
+    margin-top:16px;
+    font-size:12px;
+    color:rgba(239,231,214,0.55);
+    line-height:1.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="title-block">
+      <h1>Manifiesto de Importación</h1>
+      <div class="sub">Control de Vehículos · Extracción desde PDF</div>
+    </div>
+    <div class="stamp">FOLIO AUTOMÁTICO<br><b>VIN · MARCA · MODELO · AÑO · VALOR</b></div>
+  </header>
+
+  <label class="dropzone" id="dropzone" for="fileInput">
+    <h3>Toca aquí para seleccionar tus PDFs</h3>
+    <p>Se aceptan varios archivos a la vez · texto seleccionable (no escaneos)</p>
+    <input type="file" id="fileInput" accept="application/pdf,.pdf" multiple>
+  </label>
+
+  <div id="log"></div>
+
+  <div class="toolbar">
+    <button class="btn-primary" id="exportBtn" disabled>Descargar Excel</button>
+    <button class="btn-ghost" id="addRowBtn">+ Agregar fila manual</button>
+    <button class="btn-ghost" id="clearBtn">Limpiar todo</button>
+    <span class="count-pill" id="countPill"></span>
+  </div>
+
+  <div class="ledger">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:36px;">#</th>
+          <th style="width:130px;">Archivo</th>
+          <th style="width:170px;">VIN</th>
+          <th style="width:120px;">Marca</th>
+          <th style="width:130px;">Modelo</th>
+          <th style="width:70px;">Año</th>
+          <th style="width:130px;">Valor</th>
+          <th style="width:36px;"></th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <tr class="empty-row"><td colspan="8">Aún no hay vehículos registrados. Sube un PDF para comenzar.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer class="note">
+    La extracción es automática y heurística: revisa y corrige los campos antes de exportar, sobre todo si el PDF no usa etiquetas claras (VIN, Marca, Modelo, Año, Valor). Todos los campos son editables directamente en la tabla.
+  </footer>
+
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+const BRANDS = ["Toyota","Honda","Nissan","Ford","Chevrolet","Hyundai","Kia","Mazda","BMW","Mercedes-Benz","Mercedes","Audi","Volkswagen","VW","Subaru","Mitsubishi","Suzuki","Lexus","Jeep","Dodge","Chrysler","RAM","GMC","Buick","Cadillac","Volvo","Land Rover","Porsche","Ferrari","Lamborghini","Maserati","Peugeot","Renault","Fiat","Isuzu","Great Wall","GWM","MG","Chery","Geely","BYD","JAC","Acura","Infiniti","Mini","Jaguar","Alfa Romeo","SEAT","Skoda","Tesla"];
+
+let rows = [];
+let rowIdCounter = 0;
+
+const tbody = document.getElementById('tbody');
+const logEl = document.getElementById('log');
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const exportBtn = document.getElementById('exportBtn');
+const countPill = document.getElementById('countPill');
+
+function logMsg(msg, cls){
+  const line = document.createElement('div');
+  if(cls) line.className = cls;
+  line.textContent = msg;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('drag');
+  handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+async function handleFiles(fileList){
+  const files = Array.from(fileList).filter(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
+  if(files.length === 0){
+    logMsg('No se encontraron archivos PDF válidos.', 'err');
+    return;
+  }
+  for(const file of files){
+    try{
+      logMsg(`Procesando: ${file.name} ...`);
+      const text = await extractPdfText(file);
+      const extracted = extractFields(text);
+      if(extracted.length === 0){
+        rows.push(newRow(file.name, {}));
+        logMsg(`⚠ ${file.name}: no se detectó VIN, se agregó fila vacía para completar a mano.`, 'err');
+      } else {
+        extracted.forEach(fields => rows.push(newRow(file.name, fields)));
+        logMsg(`✓ ${file.name}: ${extracted.length} vehículo(s) detectado(s).`, 'ok');
+      }
+    } catch(err){
+      console.error(err);
+      logMsg(`✗ Error leyendo ${file.name}: ${err.message}`, 'err');
+    }
+  }
+  renderTable();
+  fileInput.value = '';
+}
+
+async function extractPdfText(file){
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  let fullText = '';
+  for(let i = 1; i <= pdf.numPages; i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    fullText += content.items.map(it => it.str).join(' ') + '\n';
+  }
+  return fullText;
+}
+
+function extractFields(text){
+  const vinRegex = /\b[A-HJ-NPR-Z0-9]{17}\b/gi;
+  const vins = [...new Set((text.match(vinRegex) || []).map(v => v.toUpperCase()))];
+
+  const marcaLabelMatch = text.match(/(?:Marca|Brand)\s*[:\-]?\s*([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\-\s]{1,25}?)(?=\s{2,}|\n|,|\.|Modelo|Model|$)/i);
+  let marca = marcaLabelMatch ? marcaLabelMatch[1].trim() : '';
+  if(!marca){
+    const found = BRANDS.find(b => new RegExp(`\\b${b.replace('.', '\\.')}\\b`, 'i').test(text));
+    if(found) marca = found;
+  }
+
+  const modeloLabelMatch = text.match(/(?:Modelo|Model)\s*[:\-]?\s*([A-Za-z0-9À-ÿ][A-Za-z0-9À-ÿ\-\s]{0,20}?)(?=\s{2,}|\n|,|\.|Año|Year|$)/i);
+  const modelo = modeloLabelMatch ? modeloLabelMatch[1].trim() : '';
+
+  const anioLabelMatch = text.match(/(?:A[ñn]o(?:\s*Modelo)?|Model\s*Year|Year)\s*[:\-]?\s*((?:19|20)\d{2})/i);
+  let anio = anioLabelMatch ? anioLabelMatch[1] : '';
+  if(!anio){
+    const anyYear = text.match(/\b(19[8-9]\d|20[0-3]\d)\b/);
+    if(anyYear) anio = anyYear[1];
+  }
+
+  const valorLabelMatch = text.match(/(?:Valor(?:\s*(?:Factura|Comercial|CIF|FOB))?|Value|Precio|Price|Monto)\s*[:\-]?\s*(?:USD|US\$|MXN|\$)?\s*([\d,]+(?:\.\d{1,2})?)/i);
+  let valor = '';
+  if(valorLabelMatch){
+    const currencyNear = /USD|US\$/.test(valorLabelMatch[0]) ? 'USD ' : (/MXN/.test(valorLabelMatch[0]) ? 'MXN ' : '$');
+    valor = currencyNear + valorLabelMatch[1];
+  }
+
+  if(vins.length === 0){
+    return [];
+  }
+  return vins.map(vin => ({ vin, marca, modelo, anio, valor }));
+}
+
+function newRow(fileName, fields){
+  rowIdCounter++;
+  return {
+    id: rowIdCounter,
+    file: fileName || '',
+    vin: fields.vin || '',
+    marca: fields.marca || '',
+    modelo: fields.modelo || '',
+    anio: fields.anio || '',
+    valor: fields.valor || ''
+  };
+}
+
+function isValidVin(v){
+  return /^[A-HJ-NPR-Z0-9]{17}$/i.test(v || '');
+}
+
+function renderTable(){
+  tbody.innerHTML = '';
+  if(rows.length === 0){
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="8">Aún no hay vehículos registrados. Sube un PDF para comenzar.</td></tr>';
+  } else {
+    rows.forEach((row, idx) => {
+      const tr = document.createElement('tr');
+      const vinWarn = !isValidVin(row.vin) ? '<span class="warn-badge">revisar</span>' : '';
+      tr.innerHTML = `
+        <td style="padding:10px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;font-size:12px;">${idx + 1}</td>
+        <td class="file-cell" title="${escapeAttr(row.file)}">${escapeHtml(row.file)}</td>
+        <td class="vin-cell"><input class="cell-input" data-field="vin" data-id="${row.id}" value="${escapeAttr(row.vin)}" placeholder="17 caracteres">${vinWarn}</td>
+        <td><input class="cell-input" data-field="marca" data-id="${row.id}" value="${escapeAttr(row.marca)}" placeholder="—"></td>
+        <td><input class="cell-input" data-field="modelo" data-id="${row.id}" value="${escapeAttr(row.modelo)}" placeholder="—"></td>
+        <td><input class="cell-input" data-field="anio" data-id="${row.id}" value="${escapeAttr(row.anio)}" placeholder="—"></td>
+        <td><input class="cell-input" data-field="valor" data-id="${row.id}" value="${escapeAttr(row.valor)}" placeholder="—"></td>
+        <td class="del-cell"><button data-id="${row.id}" title="Eliminar fila">✕</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+  countPill.textContent = rows.length > 0 ? `${rows.length} vehículo${rows.length === 1 ? '' : 's'} registrado${rows.length === 1 ? '' : 's'}` : '';
+  exportBtn.disabled = rows.length === 0;
+}
+
+tbody.addEventListener('input', e => {
+  if(!e.target.matches('.cell-input')) return;
+  const id = Number(e.target.dataset.id);
+  const field = e.target.dataset.field;
+  const row = rows.find(r => r.id === id);
+  if(row) row[field] = e.target.value;
+});
+
+tbody.addEventListener('click', e => {
+  const btn = e.target.closest('td.del-cell button');
+  if(!btn) return;
+  const id = Number(btn.dataset.id);
+  rows = rows.filter(r => r.id !== id);
+  renderTable();
+});
+
+document.getElementById('addRowBtn').addEventListener('click', () => {
+  rows.push(newRow('(manual)', {}));
+  renderTable();
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  if(rows.length === 0) return;
+  if(confirm('¿Eliminar todos los vehículos de la tabla?')){
+    rows = [];
+    logEl.innerHTML = '';
+    renderTable();
+  }
+});
+
+exportBtn.addEventListener('click', () => {
+  const data = rows.map(r => ({
+    'Archivo': r.file,
+    'VIN': r.vin,
+    'Marca': r.marca,
+    'Modelo': r.modelo,
+    'Año': r.anio,
+    'Valor': r.valor
+  }));
+  const ws = XLSX.utils.json_to_sheet(data);
+  ws['!cols'] = [{wch:22},{wch:19},{wch:16},{wch:16},{wch:8},{wch:14}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Vehículos');
+  const today = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `control-importacion-vehiculos-${today}.xlsx`);
+});
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeAttr(str){ return escapeHtml(str); }
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
