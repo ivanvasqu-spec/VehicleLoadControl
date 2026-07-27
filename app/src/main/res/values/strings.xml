@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Vehicle Load Control</string>
+    <string name="documents_tab">Documentos</string>
+    <string name="vehicles_tab">Vehículos</string>
+    <string name="tracking_tab">Seguimiento</string>
+    <string name="import_pdf_tab">Importar PDF</string>
+    <string name="loading">Cargando...</string>
+    <string name="error">Error</string>
+    <string name="retry">Reintentar</string>
+    <string name="add">Agregar</string>
+    <string name="delete">Eliminar</string>
+    <string name="search">Buscar</string>
+    <string name="no_data">No hay datos</string>
+</resources>
