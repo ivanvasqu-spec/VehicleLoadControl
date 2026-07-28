@@ -143,10 +143,10 @@
   .ledger{
     background:var(--paper);
     border-radius:10px;
-    overflow:hidden;
+    overflow-x:auto;
     box-shadow:0 12px 30px rgba(0,0,0,0.35);
   }
-  table{width:100%;border-collapse:collapse;}
+  table{width:100%;min-width:980px;border-collapse:collapse;}
   thead th{
     font-family:'JetBrains Mono',monospace;
     font-size:11px;
@@ -186,6 +186,19 @@
     background:none;border:none;color:var(--rust);font-size:16px;cursor:pointer;padding:6px;line-height:1;
   }
   td.del-cell button:hover{color:#B5493A;}
+  .btn-track{
+    background:none;
+    border:1px solid var(--brass-dark);
+    color:var(--ink);
+    font-size:15px;
+    cursor:pointer;
+    padding:5px 8px;
+    border-radius:5px;
+    line-height:1;
+  }
+  .btn-track:hover{background:var(--brass);border-color:var(--brass);}
+  .btn-track:disabled{opacity:0.3;cursor:not-allowed;}
+  td.track-cell{text-align:center;padding:0 6px;}
   .warn-badge{
     display:inline-block;
     font-family:'JetBrains Mono',monospace;
@@ -243,17 +256,20 @@
       <thead>
         <tr>
           <th style="width:36px;">#</th>
-          <th style="width:130px;">Archivo</th>
+          <th style="width:170px;">Consignatario</th>
+          <th style="width:170px;">Marca y Modelo</th>
           <th style="width:170px;">VIN</th>
-          <th style="width:120px;">Marca</th>
-          <th style="width:130px;">Modelo</th>
           <th style="width:70px;">Año</th>
-          <th style="width:130px;">Valor</th>
+          <th style="width:110px;">Color</th>
+          <th style="width:120px;">B/L</th>
+          <th style="width:110px;">Fecha Llegada</th>
+          <th style="width:50px;">Rastrear</th>
+          <th style="width:100px;">Archivo</th>
           <th style="width:36px;"></th>
         </tr>
       </thead>
       <tbody id="tbody">
-        <tr class="empty-row"><td colspan="8">Aún no hay vehículos registrados. Sube un PDF para comenzar.</td></tr>
+        <tr class="empty-row"><td colspan="11">Aún no hay vehículos registrados. Sube un PDF para comenzar.</td></tr>
       </tbody>
     </table>
   </div>
@@ -268,6 +284,58 @@
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
 const BRANDS = ["Toyota","Honda","Nissan","Ford","Chevrolet","Hyundai","Kia","Mazda","BMW","Mercedes-Benz","Mercedes","Audi","Volkswagen","VW","Subaru","Mitsubishi","Suzuki","Lexus","Jeep","Dodge","Chrysler","RAM","GMC","Buick","Cadillac","Volvo","Land Rover","Porsche","Ferrari","Lamborghini","Maserati","Peugeot","Renault","Fiat","Isuzu","Great Wall","GWM","MG","Chery","Geely","BYD","JAC","Acura","Infiniti","Mini","Jaguar","Alfa Romeo","SEAT","Skoda","Tesla"];
+
+const CARRIERS = {
+  'MAEU': { name: 'Maersk', url: bl => `https://www.maersk.com/tracking/${bl}` },
+  'MSCU': { name: 'MSC', url: bl => `https://www.msc.com/en/track-a-shipment?agencyPath=msc&trackingNumber=${bl}` },
+  'MEDU': { name: 'MSC', url: bl => `https://www.msc.com/en/track-a-shipment?agencyPath=msc&trackingNumber=${bl}` },
+  'HLCU': { name: 'Hapag-Lloyd', url: bl => `https://www.hapag-lloyd.com/en/online-business/track/track-by-booking-solution.html?blno=${bl}` },
+  'COSU': { name: 'COSCO', url: bl => `https://elines.coscoshipping.com/ebusiness/cargoTracking?trackingType=BILLOFLADING&number=${bl}` },
+  'ZIMU': { name: 'ZIM', url: bl => `https://www.zim.com/tools/track-a-shipment?consnumber=${bl}` },
+  'CMDU': { name: 'CMA CGM', url: bl => `https://www.cma-cgm.com/ebusiness/tracking/search?SearchBy=Reference&Reference=${bl}` },
+  'ONEY': { name: 'ONE', url: bl => `https://ecomm.one-line.com/one-ecom/manage-shipment/cargo-tracking?bl=${bl}` },
+  'OOLU': { name: 'OOCL', url: bl => `https://www.oocl.com/eng/ourservices/eservices/cargotracking/Pages/cargotracking.aspx?ContainerNumber=${bl}` },
+  'EGLV': { name: 'Evergreen', url: bl => `https://www.evergreen-line.com/telms/track/TrackCargo.jsp?blNo=${bl}` },
+  'YMLU': { name: 'Yang Ming', url: bl => `https://www.yangming.com/e-service/Track_Trace/track_trace_cargo_tracking.aspx?bl_no=${bl}` },
+  'PABV': { name: 'PIL', url: bl => `https://www.pilship.com/en-tracking/index/index.html?billOfLadingNo=${bl}` },
+  'WHLC': { name: 'Wan Hai', url: bl => `https://www.wanhai.com/views/Main.xhtml` },
+};
+
+function trackBL(bl){
+  if(!bl){
+    logMsg('No hay número de B/L guardado en esta fila para rastrear.', 'err');
+    return;
+  }
+  const prefix = bl.slice(0, 4).toUpperCase();
+  const carrier = CARRIERS[prefix];
+  if(carrier){
+    logMsg(`Abriendo rastreo de ${carrier.name} para ${bl} ...`);
+    window.open(carrier.url(bl), '_blank');
+  } else {
+    logMsg(`Naviera no reconocida por el prefijo "${prefix}". Abriendo búsqueda general.`, 'err');
+    window.open(`https://www.google.com/search?q=tracking+bill+of+lading+${encodeURIComponent(bl)}`, '_blank');
+  }
+}
+
+const VIN_YEAR_CODES = {
+  'A':[1980,2010],'B':[1981,2011],'C':[1982,2012],'D':[1983,2013],'E':[1984,2014],'F':[1985,2015],
+  'G':[1986,2016],'H':[1987,2017],'J':[1988,2018],'K':[1989,2019],'L':[1990,2020],'M':[1991,2021],
+  'N':[1992,2022],'P':[1993,2023],'R':[1994,2024],'S':[1995,2025],'T':[1996,2026],'V':[1997,2027],
+  'W':[1998,2028],'X':[1999,2029],'Y':[2000,2030],
+  '1':[2001,2031],'2':[2002,2032],'3':[2003,2033],'4':[2004,2034],'5':[2005,2035],
+  '6':[2006,2036],'7':[2007,2037],'8':[2008,2038],'9':[2009,2039]
+};
+
+function decodeVinYear(vin){
+  if(!vin || vin.length < 10) return '';
+  const code = vin.charAt(9).toUpperCase();
+  const options = VIN_YEAR_CODES[code];
+  if(!options) return '';
+  const currentYear = new Date().getFullYear();
+  const valid = options.filter(y => y <= currentYear + 1);
+  if(valid.length === 0) return String(options[0]);
+  return String(Math.max(...valid));
+}
 
 let rows = [];
 let rowIdCounter = 0;
@@ -348,6 +416,7 @@ function extractFields(text){
 
   const modeloLabelMatch = text.match(/(?:Modelo|Model)\s*[:\-]?\s*([A-Za-z0-9À-ÿ][A-Za-z0-9À-ÿ\-\s]{0,20}?)(?=\s{2,}|\n|,|\.|Año|Year|$)/i);
   const modelo = modeloLabelMatch ? modeloLabelMatch[1].trim() : '';
+  const marcaModelo = [marca, modelo].filter(Boolean).join(' ').trim();
 
   const anioLabelMatch = text.match(/(?:A[ñn]o(?:\s*Modelo)?|Model\s*Year|Year)\s*[:\-]?\s*((?:19|20)\d{2})/i);
   let anio = anioLabelMatch ? anioLabelMatch[1] : '';
@@ -356,17 +425,40 @@ function extractFields(text){
     if(anyYear) anio = anyYear[1];
   }
 
-  const valorLabelMatch = text.match(/(?:Valor(?:\s*(?:Factura|Comercial|CIF|FOB))?|Value|Precio|Price|Monto)\s*[:\-]?\s*(?:USD|US\$|MXN|\$)?\s*([\d,]+(?:\.\d{1,2})?)/i);
-  let valor = '';
-  if(valorLabelMatch){
-    const currencyNear = /USD|US\$/.test(valorLabelMatch[0]) ? 'USD ' : (/MXN/.test(valorLabelMatch[0]) ? 'MXN ' : '$');
-    valor = currencyNear + valorLabelMatch[1];
+  const colorLabelMatch = text.match(/(?:Color|Colour)\s*[:\-]?\s*([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\-\s]{1,20}?)(?=\s{2,}|\n|,|\.|$)/i);
+  const color = colorLabelMatch ? colorLabelMatch[1].trim() : '';
+
+  const consignatarioLabelMatch = text.match(/(?:Consignatario|Consignee)\s*[:\-]?\s*([A-Za-zÀ-ÿ0-9][A-Za-zÀ-ÿ0-9.,&\-\s]{2,60}?)(?=\n|\s{3,}|$)/i);
+  const consignatario = consignatarioLabelMatch ? consignatarioLabelMatch[1].trim() : '';
+
+  const blLabelMatch = text.match(/(?:B\/?L\s*(?:No\.?)?|Bill\s*of\s*Lading(?:\s*No\.?)?|Conocimiento\s*de\s*Embarque(?:\s*No\.?)?)\s*[:\-]?\s*([A-Z0-9\-]{5,25})/i);
+  const bl = blLabelMatch ? blLabelMatch[1].trim() : '';
+
+  const vesselLabelMatch = text.match(/(?:Vessel|Buque|B\/V|M\/V)\s*[:\-]?\s*([A-Za-zÀ-ÿ0-9\-\s]{2,30}?)(?=\s{2,}|\n|,|Voyage|Viaje|\.|$)/i);
+  const vessel = vesselLabelMatch ? vesselLabelMatch[1].trim() : '';
+
+  const fechaLabelMatch = text.match(/(?:Fecha(?:\s*de\s*(?:Embarque|Zarpe|Salida))?|Date)\s*[:\-]?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i);
+  let fecha = fechaLabelMatch ? fechaLabelMatch[1] : '';
+  if(!fecha){
+    const anyDate = text.match(/\b(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\b/);
+    if(anyDate) fecha = anyDate[1];
   }
 
   if(vins.length === 0){
     return [];
   }
-  return vins.map(vin => ({ vin, marca, modelo, anio, valor }));
+  return vins.map(vin => {
+    let finalAnio = anio;
+    let anioFromVin = false;
+    if(!finalAnio){
+      const vinYear = decodeVinYear(vin);
+      if(vinYear){
+        finalAnio = vinYear;
+        anioFromVin = true;
+      }
+    }
+    return { vin, marcaModelo, anio: finalAnio, anioFromVin, color, consignatario, bl, vessel, fecha };
+  });
 }
 
 function newRow(fileName, fields){
@@ -374,11 +466,16 @@ function newRow(fileName, fields){
   return {
     id: rowIdCounter,
     file: fileName || '',
+    consignatario: fields.consignatario || '',
+    marcaModelo: fields.marcaModelo || '',
     vin: fields.vin || '',
-    marca: fields.marca || '',
-    modelo: fields.modelo || '',
     anio: fields.anio || '',
-    valor: fields.valor || ''
+    anioFromVin: fields.anioFromVin || false,
+    color: fields.color || '',
+    bl: fields.bl || '',
+    vessel: fields.vessel || '',
+    fecha: fields.fecha || '',
+    fechaLlegada: fields.fechaLlegada || ''
   };
 }
 
@@ -389,19 +486,22 @@ function isValidVin(v){
 function renderTable(){
   tbody.innerHTML = '';
   if(rows.length === 0){
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="8">Aún no hay vehículos registrados. Sube un PDF para comenzar.</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="11">Aún no hay vehículos registrados. Sube un PDF para comenzar.</td></tr>';
   } else {
     rows.forEach((row, idx) => {
       const tr = document.createElement('tr');
       const vinWarn = !isValidVin(row.vin) ? '<span class="warn-badge">revisar</span>' : '';
       tr.innerHTML = `
         <td style="padding:10px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;font-size:12px;">${idx + 1}</td>
-        <td class="file-cell" title="${escapeAttr(row.file)}">${escapeHtml(row.file)}</td>
+        <td><input class="cell-input" data-field="consignatario" data-id="${row.id}" value="${escapeAttr(row.consignatario)}" placeholder="—"></td>
+        <td><input class="cell-input" data-field="marcaModelo" data-id="${row.id}" value="${escapeAttr(row.marcaModelo)}" placeholder="—"></td>
         <td class="vin-cell"><input class="cell-input" data-field="vin" data-id="${row.id}" value="${escapeAttr(row.vin)}" placeholder="17 caracteres">${vinWarn}</td>
-        <td><input class="cell-input" data-field="marca" data-id="${row.id}" value="${escapeAttr(row.marca)}" placeholder="—"></td>
-        <td><input class="cell-input" data-field="modelo" data-id="${row.id}" value="${escapeAttr(row.modelo)}" placeholder="—"></td>
-        <td><input class="cell-input" data-field="anio" data-id="${row.id}" value="${escapeAttr(row.anio)}" placeholder="—"></td>
-        <td><input class="cell-input" data-field="valor" data-id="${row.id}" value="${escapeAttr(row.valor)}" placeholder="—"></td>
+        <td><input class="cell-input" data-field="anio" data-id="${row.id}" value="${escapeAttr(row.anio)}" placeholder="—">${row.anioFromVin ? '<span class="warn-badge" style="background:var(--brass-dark);" title="Estimado a partir del VIN, verifica">VIN</span>' : ''}</td>
+        <td><input class="cell-input" data-field="color" data-id="${row.id}" value="${escapeAttr(row.color)}" placeholder="—"></td>
+        <td><input class="cell-input" data-field="bl" data-id="${row.id}" value="${escapeAttr(row.bl)}" placeholder="—"></td>
+        <td><input class="cell-input" data-field="fechaLlegada" data-id="${row.id}" value="${escapeAttr(row.fechaLlegada)}" placeholder="dd/mm/aaaa"></td>
+        <td class="track-cell"><button class="btn-track" data-id="${row.id}" title="Rastrear buque">🚢</button></td>
+        <td class="file-cell" title="${escapeAttr(row.file)}">${escapeHtml(row.file)}</td>
         <td class="del-cell"><button data-id="${row.id}" title="Eliminar fila">✕</button></td>
       `;
       tbody.appendChild(tr);
@@ -416,10 +516,20 @@ tbody.addEventListener('input', e => {
   const id = Number(e.target.dataset.id);
   const field = e.target.dataset.field;
   const row = rows.find(r => r.id === id);
-  if(row) row[field] = e.target.value;
+  if(row){
+    row[field] = e.target.value;
+    if(field === 'anio') row.anioFromVin = false;
+  }
 });
 
 tbody.addEventListener('click', e => {
+  const trackBtn = e.target.closest('.btn-track');
+  if(trackBtn){
+    const id = Number(trackBtn.dataset.id);
+    const row = rows.find(r => r.id === id);
+    if(row) trackBL(row.bl);
+    return;
+  }
   const btn = e.target.closest('td.del-cell button');
   if(!btn) return;
   const id = Number(btn.dataset.id);
@@ -442,16 +552,28 @@ document.getElementById('clearBtn').addEventListener('click', () => {
 });
 
 exportBtn.addEventListener('click', () => {
-  const data = rows.map(r => ({
-    'Archivo': r.file,
-    'VIN': r.vin,
-    'Marca': r.marca,
-    'Modelo': r.modelo,
-    'Año': r.anio,
-    'Valor': r.valor
-  }));
-  const ws = XLSX.utils.json_to_sheet(data);
-  ws['!cols'] = [{wch:22},{wch:19},{wch:16},{wch:16},{wch:8},{wch:14}];
+  const firstWithBl = rows.find(r => r.bl) || {};
+  const firstWithVessel = rows.find(r => r.vessel) || {};
+  const firstWithFechaLlegada = rows.find(r => r.fechaLlegada) || {};
+
+  const aoa = [
+    [`Conocimiento de Embarque (B/L): ${firstWithBl.bl || '—'}`],
+    [`Buque / Vessel: ${firstWithVessel.vessel || '—'}      Fecha de Llegada: ${firstWithFechaLlegada.fechaLlegada || '—'}`],
+    [],
+    ['#', 'Consignatario', 'Marca y Modelo', 'VIN', 'Año', 'Color', 'B/L', 'Fecha Llegada', 'Archivo']
+  ];
+  rows.forEach((r, idx) => {
+    aoa.push([idx + 1, r.consignatario, r.marcaModelo, r.vin, r.anio, r.color, r.bl, r.fechaLlegada, r.file]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:5},{wch:26},{wch:22},{wch:19},{wch:8},{wch:14},{wch:16},{wch:14},{wch:24}];
+  ws['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 8 } }
+  ];
+  ws['!rows'] = [{ hpt: 20 }, { hpt: 20 }, { hpt: 6 }, { hpt: 20 }];
+
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Vehículos');
   const today = new Date().toISOString().slice(0,10);
@@ -471,15 +593,6 @@ if('serviceWorker' in navigator){
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
 
 
 
