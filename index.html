@@ -4,11 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Manifiesto · Control de Importación de Vehículos</title>
-<!-- ERUDA - Consola para móviles -->
 <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
 <script>
   eruda.init();
-  console.log('✅ Eruda consola activada - Toca el círculo naranja para abrir');
+  console.log('✅ Eruda consola activada');
 </script>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
@@ -37,7 +36,6 @@
     --ok:#4C7A4E;
     --text:#1C2422;
     --text-dim:#5B6660;
-    --shadow:0 12px 30px rgba(0,0,0,0.35);
   }
   *{box-sizing:border-box;}
   body{
@@ -208,7 +206,7 @@
     overflow-x:auto;
     box-shadow:0 12px 30px rgba(0,0,0,0.35);
   }
-  table{width:100%;min-width:1200px;border-collapse:collapse;}
+  table{width:100%;min-width:1100px;border-collapse:collapse;}
   thead th{
     font-family:'JetBrains Mono',monospace;
     font-size:10px;
@@ -245,7 +243,7 @@
     background:#fff;
     border-radius:2px;
   }
-  td.vin-cell .cell-input{font-family:'JetBrains Mono',monospace;font-size:11px;}
+  td.vin-cell .cell-input{font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;}
   td.file-cell{
     color:var(--text-dim);
     font-size:10.5px;
@@ -292,6 +290,49 @@
     font-size:13.5px;
     font-style:italic;
   }
+  .group-header{
+    background:var(--ink) !important;
+    color:var(--paper) !important;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    font-weight:700;
+    padding:8px 12px !important;
+  }
+  .group-header td{
+    padding:8px 12px !important;
+    background:var(--ink);
+    color:var(--paper);
+  }
+  .group-header .cell-input{
+    background:transparent;
+    color:var(--paper);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:4px;
+    padding:4px 8px;
+    font-size:12px;
+    width:auto;
+  }
+  .group-header .cell-input:focus{
+    background:rgba(255,255,255,0.1);
+    border-color:var(--brass);
+    outline:none;
+  }
+  .group-header .btn-track-summary{
+    background:var(--brass);
+    color:var(--ink-deep);
+    padding:3px 10px;
+    font-size:11px;
+  }
+  .group-header .btn-pdf-link{
+    background:var(--brass-dark);
+    color:#fff;
+    padding:2px 8px;
+    font-size:11px;
+    border-radius:4px;
+    cursor:pointer;
+    border:none;
+  }
+  .group-header .btn-pdf-link:hover{filter:brightness(1.2);}
   .shipment-card{
     background:var(--paper);
     border-radius:8px;
@@ -403,6 +444,73 @@
     font-family:'JetBrains Mono',monospace;
     font-size:11px;
   }
+  .bl-group-header{
+    background:var(--ink) !important;
+    color:var(--paper) !important;
+  }
+  .bl-group-header td{
+    padding:6px 10px !important;
+    background:var(--ink);
+    color:var(--paper);
+    border-bottom:2px solid var(--brass);
+  }
+  .bl-group-header .bl-info{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .bl-group-header .bl-info .bl-label{
+    color:var(--brass);
+    font-weight:400;
+  }
+  .bl-group-header .bl-info .bl-number{
+    color:#fff;
+    background:rgba(192,138,46,0.2);
+    padding:2px 10px;
+    border-radius:4px;
+    border:1px solid var(--brass);
+  }
+  .bl-group-header .bl-info .field-group{
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .bl-group-header .bl-info .field-group label{
+    font-size:10px;
+    color:var(--brass);
+    font-weight:400;
+  }
+  .bl-group-header .bl-info .field-group input{
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:4px;
+    color:var(--paper);
+    padding:3px 8px;
+    font-size:11px;
+    font-family:'Inter',sans-serif;
+    width:120px;
+  }
+  .bl-group-header .bl-info .field-group input:focus{
+    border-color:var(--brass);
+    outline:none;
+    background:rgba(255,255,255,0.15);
+  }
+  .bl-group-header .bl-info .field-group input::placeholder{
+    color:rgba(255,255,255,0.3);
+  }
+  .bl-group-header .bl-actions{
+    display:flex;
+    gap:6px;
+    margin-left:auto;
+  }
+  .bl-group-header .bl-actions button{
+    font-size:11px;
+    padding:3px 10px;
+  }
 </style>
 </head>
 <body>
@@ -420,7 +528,7 @@
   <header>
     <div class="title-block">
       <h1>Manifiesto de Importación</h1>
-      <div class="sub">Control de Vehículos · OCR para PDFs escaneados</div>
+      <div class="sub">Control de Vehículos · Agrupado por B/L</div>
     </div>
     <div class="stamp">FOLIO AUTOMÁTICO<br><b>VIN · MARCA · MODELO · AÑO · BL</b></div>
   </header>
@@ -462,20 +570,16 @@
       <thead>
         <tr>
           <th style="width:28px;">#</th>
-          <th style="width:130px;">Consignatario</th>
-          <th style="width:150px;">Marca y Modelo</th>
-          <th style="width:160px;">VIN / Chasis</th>
+          <th style="width:170px;">Marca y Modelo</th>
+          <th style="width:170px;">VIN / Chasis</th>
           <th style="width:55px;">Año</th>
           <th style="width:80px;">Color</th>
-          <th style="width:110px;">B/L</th>
-          <th style="width:110px;">Buque</th>
-          <th style="width:80px;">Fecha</th>
           <th style="width:100px;">Archivo</th>
           <th style="width:28px;"></th>
         </tr>
       </thead>
       <tbody id="tbody">
-        <tr class="empty-row"><td colspan="11">Aún no hay vehículos registrados. Sube un PDF para comenzar.</td></tr>
+        <tr class="empty-row"><td colspan="7">Aún no hay vehículos registrados. Sube un PDF para comenzar.</td></tr>
       </tbody>
     </table>
   </div>
@@ -607,7 +711,7 @@ function validateVin(vin){
   return vinUpper[8] === expectedCheck;
 }
 
-// ============ EXTRACCIÓN DE TEXTO CON OCR EN IMÁGENES ============
+// ============ EXTRACCIÓN DE TEXTO CON OCR ============
 async function extractPdfTextWithOCR(file){
   console.log('📄 === EXTRACT PDF TEXT ===');
   console.log('📄 Archivo:', file.name);
@@ -656,15 +760,6 @@ async function extractPdfTextWithOCR(file){
   
   console.log('📄 === TEXTO FINAL ===');
   console.log(`📄 Total: ${fullText.length} caracteres`);
-  console.log('📄 Buscando patrones de vehículos...');
-  
-  const vehiclePatterns = fullText.match(/\d{4}YM\s+[A-Za-z]+\s+[A-Za-z0-9\s\.]+CHASSIS\s*NO\.?:?\s*[A-HJ-NPR-Z0-9]{17}/gi);
-  if(vehiclePatterns) {
-    console.log('🚗 Patrones de vehículos encontrados:', vehiclePatterns.length);
-    vehiclePatterns.forEach((p, idx) => console.log(`   ${idx+1}: ${p}`));
-  } else {
-    console.log('⚠️ No se encontraron patrones de vehículos');
-  }
   
   return fullText;
 }
@@ -672,7 +767,6 @@ async function extractPdfTextWithOCR(file){
 // ============ EXTRACCIÓN DE CAMPOS MEJORADA ============
 function extractFields(text, filename){
   console.log('🔍 === EXTRACT FIELDS ===');
-  console.log('📄 Texto recibido (primeros 500 chars):', text.substring(0, 500));
   
   const consignatario = extractConsignatario(text);
   const bl = extractBL(text, filename);
@@ -681,6 +775,7 @@ function extractFields(text, filename){
   
   console.log('📌 Datos básicos:', { consignatario, bl, vessel, fecha });
 
+  // ESTRATEGIA 1: Patrón exacto "2026YM TOYOTA FORTUNER 2.7 WHITE CHASSIS NO: XXX"
   const vehicleLineRegex = /(\d{4})\s*YM\s+([A-Za-z][A-Za-z\-]*)\s+([\s\S]*?)\s*CHASSIS\s*NO\.?:?\s*([A-HJ-NPR-Z0-9]{17})/gi;
   const vehicleMatches = [...text.matchAll(vehicleLineRegex)];
   console.log('🔎 Estrategia 1 - Matches:', vehicleMatches.length);
@@ -691,22 +786,39 @@ function extractFields(text, filename){
       const anio = m[1];
       const marca = m[2].trim();
       let rest = m[3].trim().replace(/\s+/g, ' ');
+      
+      // LIMITAR: Solo tomar hasta el color (máximo 50 caracteres)
+      let marcaModelo = marca;
       let color = '';
+      
+      // Buscar color al final del texto
       const colorFound = COLORS.find(c => new RegExp(`\\b${c}\\b$`, 'i').test(rest));
       if(colorFound){
         color = colorFound.charAt(0) + colorFound.slice(1).toLowerCase();
+        // Remover el color del resto
         rest = rest.replace(new RegExp(`\\b${colorFound}\\b$`, 'i'), '').trim();
       }
+      
+      // Construir marca + modelo (limitado a 50 caracteres)
+      let modeloPart = rest.substring(0, 40); // Tomar solo los primeros 40 caracteres
+      // Si hay un punto o espacio doble, cortar ahí
+      const cutPoint = modeloPart.search(/[\.\s]{2,}/);
+      if(cutPoint > 0) modeloPart = modeloPart.substring(0, cutPoint);
+      
+      marcaModelo = [marca, modeloPart].filter(Boolean).join(' ').trim();
+      // Limitar a 50 caracteres total
+      if(marcaModelo.length > 50) marcaModelo = marcaModelo.substring(0, 50);
+      
       const vin = m[4].toUpperCase();
-      const marcaModelo = [marca, rest].filter(Boolean).join(' ').trim();
       console.log(`   🚗 ${vin} | ${marcaModelo} | ${anio} | ${color}`);
       return { vin, marcaModelo, anio, anioFromVin: false, color, consignatario, bl, vessel, fecha };
     });
   }
 
+  // ESTRATEGIA 2: Buscar VINs sueltos
   const vinRegex = /\b[A-HJ-NPR-Z0-9]{17}\b/gi;
   const vins = [...new Set((text.match(vinRegex) || []).map(v => v.toUpperCase()))];
-  console.log('🔎 Estrategia 2 - VINs encontrados:', vins.length, vins);
+  console.log('🔎 Estrategia 2 - VINs encontrados:', vins.length);
   
   if(vins.length > 0){
     console.log('✅ Estrategia 2 - VINs detectados:', vins.length);
@@ -718,7 +830,7 @@ function extractFields(text, filename){
       
       let marcaModelo = '';
       let color = '';
-      const contextRegex = new RegExp(`[\\s\\S]{0,150}${vin}[\\s\\S]{0,150}`, 'i');
+      const contextRegex = new RegExp(`[\\s\\S]{0,100}${vin}[\\s\\S]{0,100}`, 'i');
       const contextMatch = text.match(contextRegex);
       if(contextMatch){
         const ctx = contextMatch[0];
@@ -728,10 +840,11 @@ function extractFields(text, filename){
         if(colorFound) color = colorFound.charAt(0) + colorFound.slice(1).toLowerCase();
       }
       
-      return { vin, marcaModelo, anio: finalAnio, anioFromVin, color, consignatario, bl, vessel, fecha };
+      return { vin, marcaModelo: marcaModelo.substring(0, 50), anio: finalAnio, anioFromVin, color, consignatario, bl, vessel, fecha };
     });
   }
 
+  // ESTRATEGIA 3: Buscar "CHASSIS"
   const chassisRegex = /CHASSIS\s*NO\.?:?\s*([A-HJ-NPR-Z0-9]{17})/gi;
   const chassisMatches = [...text.matchAll(chassisRegex)];
   console.log('🔎 Estrategia 3 - Chassis matches:', chassisMatches.length);
@@ -748,29 +861,6 @@ function extractFields(text, filename){
     });
   }
 
-  const ymRegex = /\b(\d{4})\s*YM\s*([A-Za-z\s]+?)(?=\s*\d{4}YM|\s*CHASSIS|$)/gi;
-  const ymMatches = [...text.matchAll(ymRegex)];
-  console.log('🔎 Estrategia 4 - YM matches:', ymMatches.length);
-  
-  if(ymMatches.length > 0){
-    console.log('✅ Estrategia 4 - YM detectados:', ymMatches.length);
-    const results = [];
-    ymMatches.forEach(m => {
-      const anio = m[1];
-      const marcaModelo = m[2].trim();
-      const vinContext = text.substring(Math.max(0, m.index - 100), Math.min(text.length, m.index + 200));
-      const vinFound = vinContext.match(/\b[A-HJ-NPR-Z0-9]{17}\b/);
-      if(vinFound) {
-        const vin = vinFound[0].toUpperCase();
-        let color = '';
-        const colorFound = COLORS.find(c => new RegExp(`\\b${c}\\b`, 'i').test(vinContext));
-        if(colorFound) color = colorFound.charAt(0) + colorFound.slice(1).toLowerCase();
-        results.push({ vin, marcaModelo, anio, anioFromVin: false, color, consignatario, bl, vessel, fecha });
-      }
-    });
-    if(results.length > 0) return results;
-  }
-
   console.log('❌ Ninguna estrategia encontró vehículos.');
   return [];
 }
@@ -781,6 +871,7 @@ let rowIdCounter = 0;
 let filterText = '';
 const STORAGE_KEY = 'manifiesto-vehiculos-rows-v1';
 let pdfRecords = [];
+let blGroups = {};
 
 function saveRows(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(rows)); } 
@@ -930,8 +1021,6 @@ async function handleFiles(fileList){
         if(blForFile) newRowData.bl = blForFile;
         rows.push(newRowData);
         logMsg(`⚠ ${file.name}: no se detectó VIN, se agregó fila vacía.`, 'warn');
-        logMsg(`📝 Texto extraído (primeros 300 chars): ${text.substring(0, 300)}...`, 'debug');
-        logMsg(`📝 Busca "CHASSIS" o "VIN" en el texto. Si no aparecen, el OCR no funcionó.`, 'debug');
       } else {
         extracted.forEach(fields => {
           const newRowData = newRow(file.name, fields);
@@ -946,7 +1035,6 @@ async function handleFiles(fileList){
     } catch(err){
       console.error('❌ Error:', err);
       logMsg(`❌ Error en ${file.name}: ${err.message}`, 'err');
-      logMsg(`🔍 Revisa la consola (Eruda) para más detalles.`, 'debug');
     }
   }
 
@@ -1003,12 +1091,11 @@ function newRow(fileName, fields){
   };
 }
 
-// ============ RENDER TABLA ============
+// ============ RENDER TABLA AGRUPADA POR BL ============
 function getFilteredRows(){
   if(!filterText.trim()) return rows;
   const lower = filterText.toLowerCase();
   return rows.filter(r => 
-    String(r.consignatario).toLowerCase().includes(lower) ||
     String(r.marcaModelo).toLowerCase().includes(lower) ||
     String(r.vin).toLowerCase().includes(lower) ||
     String(r.anio).toLowerCase().includes(lower) ||
@@ -1025,12 +1112,62 @@ function renderTable(){
   tbody.innerHTML = '';
   
   if(filtered.length === 0){
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="11">${rows.length === 0 ? 'Aún no hay vehículos registrados. Sube un PDF para comenzar.' : 'No hay coincidencias con tu búsqueda.'}</td></tr>`;
-  } else {
-    const vinCounts = {};
-    filtered.forEach(r => { if(r.vin) vinCounts[r.vin] = (vinCounts[r.vin] || 0) + 1; });
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">${rows.length === 0 ? 'Aún no hay vehículos registrados. Sube un PDF para comenzar.' : 'No hay coincidencias con tu búsqueda.'}</td></tr>`;
+    countPill.textContent = rows.length > 0 ? `${rows.length} vehículo${rows.length === 1 ? '' : 's'}` : '';
+    exportBtn.disabled = rows.length === 0;
+    exportPdfBtn.disabled = rows.length === 0;
+    return;
+  }
+
+  // Agrupar por BL
+  const groups = {};
+  filtered.forEach(row => {
+    const key = row.bl || 'Sin B/L';
+    if(!groups[key]) groups[key] = [];
+    groups[key].push(row);
+  });
+
+  let rowIndex = 0;
+  const vinCounts = {};
+  filtered.forEach(r => { if(r.vin) vinCounts[r.vin] = (vinCounts[r.vin] || 0) + 1; });
+
+  Object.keys(groups).forEach(blKey => {
+    const groupRows = groups[blKey];
+    const firstRow = groupRows[0];
     
-    filtered.forEach((row, idx) => {
+    // === FILA DE CABECERA DEL GRUPO (BL + Barco + Fecha) ===
+    const headerTr = document.createElement('tr');
+    headerTr.className = 'bl-group-header';
+    
+    // Obtener el PDF record para este BL
+    const pdfRecord = pdfRecords.find(r => r.bl === blKey);
+    const pdfLink = pdfRecord ? `<button class="btn-pdf-link" data-pdf-id="${pdfRecord.id}" title="Ver PDF original">📎</button>` : '';
+    
+    headerTr.innerHTML = `
+      <td colspan="7">
+        <div class="bl-info">
+          <span class="bl-label">📄 B/L:</span>
+          <span class="bl-number">${escapeHtml(blKey)}</span>
+          <span class="field-group">
+            <label>🚢 Barco:</label>
+            <input class="cell-input vessel-input" data-bl="${escapeAttr(blKey)}" value="${escapeAttr(firstRow.vessel || '')}" placeholder="Ingresar barco...">
+          </span>
+          <span class="field-group">
+            <label>📅 Fecha:</label>
+            <input class="cell-input fecha-input" data-bl="${escapeAttr(blKey)}" value="${escapeAttr(firstRow.fecha || '')}" placeholder="DD/MM/YYYY">
+          </span>
+          <span class="bl-actions">
+            <button class="btn-track-summary" data-bl="${escapeAttr(blKey)}">🌐 Rastrear</button>
+            ${pdfLink}
+            <button class="btn-track-summary" style="background:var(--rust);color:#fff;" data-del-bl="${escapeAttr(blKey)}">✕ Eliminar BL</button>
+          </span>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(headerTr);
+
+    // === FILAS DE VEHÍCULOS DEL GRUPO ===
+    groupRows.forEach((row) => {
       const tr = document.createElement('tr');
       const isValid = validateVin(row.vin);
       const vinWarn = !isValid && row.vin ? '<span class="warn-badge">⚠ revisar</span>' : '';
@@ -1038,26 +1175,24 @@ function renderTable(){
       const dupBadge = isDuplicate ? '<span class="duplicate-badge">duplicado</span>' : '';
       const highlightClass = isDuplicate ? 'highlight-duplicate' : '';
       
-      const pdfRecord = getPdfByFileName(row.file);
-      const pdfLink = pdfRecord ? `<button class="btn-pdf-link" data-pdf-id="${pdfRecord.id}" title="Ver PDF original">📎</button>` : '';
+      // Limitar marcaModelo a 50 caracteres para mostrar
+      const displayMarca = (row.marcaModelo || '').substring(0, 50);
       
       tr.innerHTML = `
-        <td style="padding:8px 4px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;font-size:11px;text-align:center;">${idx + 1}</td>
-        <td><input class="cell-input" data-field="consignatario" data-id="${row.id}" value="${escapeAttr(row.consignatario)}" placeholder="—"></td>
-        <td><input class="cell-input" data-field="marcaModelo" data-id="${row.id}" value="${escapeAttr(row.marcaModelo)}" placeholder="—"></td>
-        <td class="vin-cell"><input class="cell-input ${highlightClass}" data-field="vin" data-id="${row.id}" value="${escapeAttr(row.vin)}" placeholder="17 caracteres">${vinWarn}${dupBadge}</td>
+        <td style="padding:8px 4px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;font-size:11px;text-align:center;">${rowIndex + 1}</td>
+        <td><input class="cell-input" data-field="marcaModelo" data-id="${row.id}" value="${escapeAttr(displayMarca)}" placeholder="—" maxlength="50"></td>
+        <td class="vin-cell"><input class="cell-input ${highlightClass}" data-field="vin" data-id="${row.id}" value="${escapeAttr(row.vin)}" placeholder="17 caracteres" maxlength="17">${vinWarn}${dupBadge}</td>
         <td><input class="cell-input" data-field="anio" data-id="${row.id}" value="${escapeAttr(row.anio)}" placeholder="—">${row.anioFromVin ? '<span class="warn-badge" style="background:var(--brass-dark);" title="Estimado a partir del VIN">VIN</span>' : ''}</td>
         <td><input class="cell-input" data-field="color" data-id="${row.id}" value="${escapeAttr(row.color)}" placeholder="—"></td>
-        <td><input class="cell-input" data-field="bl" data-id="${row.id}" value="${escapeAttr(row.bl)}" placeholder="—" style="font-family:'JetBrains Mono',monospace;font-size:11px;"></td>
-        <td><input class="cell-input" data-field="vessel" data-id="${row.id}" value="${escapeAttr(row.vessel)}" placeholder="—"></td>
-        <td><input class="cell-input" data-field="fecha" data-id="${row.id}" value="${escapeAttr(row.fecha)}" placeholder="—" style="font-size:11px;"></td>
-        <td class="file-cell" title="${escapeAttr(row.file)}">${escapeHtml(row.file)} ${pdfLink}</td>
+        <td class="file-cell" title="${escapeAttr(row.file)}">${escapeHtml(row.file)}</td>
         <td class="del-cell"><button data-id="${row.id}" title="Eliminar fila">✕</button></td>
       `;
       tbody.appendChild(tr);
+      rowIndex++;
     });
-  }
-  countPill.textContent = rows.length > 0 ? `${rows.length} vehículo${rows.length === 1 ? '' : 's'} registrado${rows.length === 1 ? '' : 's'}${filterText ? ` (${filtered.length} filtrados)` : ''}` : '';
+  });
+
+  countPill.textContent = `${rows.length} vehículo${rows.length === 1 ? '' : 's'} registrado${rows.length === 1 ? '' : 's'}${filterText ? ` (${filtered.length} filtrados)` : ''}`;
   exportBtn.disabled = rows.length === 0;
   exportPdfBtn.disabled = rows.length === 0;
 }
@@ -1065,12 +1200,35 @@ function renderTable(){
 // ============ EVENTOS DE TABLA ============
 tbody.addEventListener('input', e => {
   if(!e.target.matches('.cell-input')) return;
+  
+  // Manejar campos de grupo (Barco/Fecha)
+  if(e.target.classList.contains('vessel-input') || e.target.classList.contains('fecha-input')) {
+    const bl = e.target.dataset.bl;
+    const field = e.target.classList.contains('vessel-input') ? 'vessel' : 'fecha';
+    const value = e.target.value;
+    // Actualizar todas las filas con este BL
+    rows.forEach(row => {
+      if(row.bl === bl) {
+        row[field] = value;
+      }
+    });
+    saveRows();
+    renderShipmentsSummary();
+    return;
+  }
+  
+  // Manejar campos de vehículo
   const id = Number(e.target.dataset.id);
   const field = e.target.dataset.field;
   const row = rows.find(r => r.id === id);
   if(row){
     if(field === 'vin') row[field] = e.target.value.toUpperCase();
-    else row[field] = e.target.value;
+    else if(field === 'marcaModelo') {
+      // Limitar a 50 caracteres
+      row[field] = e.target.value.substring(0, 50);
+    } else {
+      row[field] = e.target.value;
+    }
     if(field === 'anio') row.anioFromVin = false;
     saveRows();
     renderTable();
@@ -1078,6 +1236,7 @@ tbody.addEventListener('input', e => {
 });
 
 tbody.addEventListener('click', e => {
+  // Eliminar fila individual
   const delBtn = e.target.closest('td.del-cell button');
   if(delBtn){
     const id = Number(delBtn.dataset.id);
@@ -1090,6 +1249,20 @@ tbody.addEventListener('click', e => {
     return;
   }
   
+  // Eliminar todo un BL
+  const delBlBtn = e.target.closest('[data-del-bl]');
+  if(delBlBtn){
+    const bl = delBlBtn.dataset.delBl;
+    if(confirm(`¿Eliminar TODOS los vehículos del B/L ${bl}?`)){
+      rows = rows.filter(r => r.bl !== bl);
+      saveRows();
+      renderTable();
+      renderShipmentsSummary();
+    }
+    return;
+  }
+  
+  // Abrir PDF
   const pdfBtn = e.target.closest('.btn-pdf-link');
   if(pdfBtn){
     const pdfId = Number(pdfBtn.dataset.pdfId);
@@ -1097,8 +1270,15 @@ tbody.addEventListener('click', e => {
     if(record){
       openStoredPdf(record);
     } else {
-      logMsg('⚠️ El PDF ya no está disponible en el almacenamiento local.', 'err');
+      logMsg('⚠️ El PDF ya no está disponible.', 'err');
     }
+    return;
+  }
+  
+  // Rastrear BL
+  const trackBtn = e.target.closest('[data-bl]');
+  if(trackBtn && trackBtn.classList.contains('btn-track-summary')){
+    trackBL(trackBtn.dataset.bl);
   }
 });
 
@@ -1118,7 +1298,7 @@ document.getElementById('addRowBtn').addEventListener('click', () => {
 
 document.getElementById('clearBtn').addEventListener('click', () => {
   if(rows.length === 0) return;
-  if(confirm('¿Eliminar TODOS los vehículos guardados? Esto no se puede deshacer.')){
+  if(confirm('¿Eliminar TODOS los vehículos guardados?')){
     rows = [];
     saveRows();
     logEl.innerHTML = '<div class="info">💡 Todos los vehículos han sido eliminados.</div>';
@@ -1139,34 +1319,48 @@ exportBtn.addEventListener('click', () => {
   if(rows.length === 0) return;
   
   const aoa = [
-    ['#', 'Consignatario', 'Marca y Modelo', 'VIN / Chasis', 'Año', 'Color', 'B/L', 'Buque', 'Fecha', 'Archivo']
+    ['B/L', 'Barco', 'Fecha', '#', 'Marca y Modelo', 'VIN / Chasis', 'Año', 'Color', 'Archivo']
   ];
-  rows.forEach((r, idx) => {
-    aoa.push([
-      idx + 1,
-      r.consignatario,
-      r.marcaModelo,
-      r.vin,
-      r.anio,
-      r.color,
-      r.bl || '—',
-      r.vessel || '—',
-      r.fecha || '—',
-      r.file
-    ]);
+  
+  // Agrupar por BL para exportar
+  const groups = {};
+  rows.forEach(r => {
+    const key = r.bl || 'Sin B/L';
+    if(!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  });
+  
+  Object.keys(groups).forEach(blKey => {
+    const groupRows = groups[blKey];
+    const first = groupRows[0];
+    groupRows.forEach((r, idx) => {
+      aoa.push([
+        idx === 0 ? blKey : '',
+        idx === 0 ? (first.vessel || '—') : '',
+        idx === 0 ? (first.fecha || '—') : '',
+        idx + 1,
+        r.marcaModelo || '—',
+        r.vin || '—',
+        r.anio || '—',
+        r.color || '—',
+        r.file || '—'
+      ]);
+    });
+    // Línea en blanco entre grupos
+    aoa.push([]);
   });
 
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   ws['!cols'] = [
-    {wch:5},{wch:26},{wch:22},{wch:19},{wch:8},
-    {wch:14},{wch:18},{wch:20},{wch:14},{wch:24}
+    {wch:15},{wch:20},{wch:14},{wch:5},
+    {wch:30},{wch:20},{wch:8},{wch:14},{wch:24}
   ];
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Vehículos');
   const today = new Date().toISOString().slice(0,10);
   XLSX.writeFile(wb, `control-importacion-vehiculos-${today}.xlsx`);
-  logMsg(`📊 Excel exportado: control-importacion-vehiculos-${today}.xlsx`, 'ok');
+  logMsg(`📊 Excel exportado`, 'ok');
 });
 
 // ============ EXPORTAR A PDF ============
@@ -1183,42 +1377,69 @@ exportPdfBtn.addEventListener('click', () => {
     doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 28);
     doc.text(`Total de vehículos: ${rows.length}`, 14, 34);
     
-    const tableData = rows.map((r, idx) => [
-      String(idx + 1),
-      r.consignatario || '—',
-      r.marcaModelo || '—',
-      r.vin || '—',
-      r.anio || '—',
-      r.color || '—',
-      r.bl || '—',
-      r.vessel || '—',
-      r.fecha || '—'
-    ]);
+    // Agrupar por BL
+    const groups = {};
+    rows.forEach(r => {
+      const key = r.bl || 'Sin B/L';
+      if(!groups[key]) groups[key] = [];
+      groups[key].push(r);
+    });
+    
+    const tableData = [];
+    Object.keys(groups).forEach(blKey => {
+      const groupRows = groups[blKey];
+      const first = groupRows[0];
+      // Fila de cabecera del grupo
+      tableData.push([`B/L: ${blKey} | Barco: ${first.vessel || '—'} | Fecha: ${first.fecha || '—'}`, '', '', '', '', '', '', '', '']);
+      groupRows.forEach((r, idx) => {
+        tableData.push([
+          String(idx + 1),
+          r.marcaModelo || '—',
+          r.vin || '—',
+          r.anio || '—',
+          r.color || '—',
+          r.bl || '—',
+          r.vessel || '—',
+          r.fecha || '—',
+          r.file || '—'
+        ]);
+      });
+      tableData.push(['', '', '', '', '', '', '', '', '']);
+    });
     
     doc.autoTable({
       startY: 40,
-      head: [['#', 'Consignatario', 'Marca/Modelo', 'VIN', 'Año', 'Color', 'B/L', 'Buque', 'Fecha']],
+      head: [['#', 'Marca/Modelo', 'VIN', 'Año', 'Color', 'B/L', 'Barco', 'Fecha', 'Archivo']],
       body: tableData,
       theme: 'grid',
       styles: { fontSize: 7, cellPadding: 2 },
       headStyles: { fillColor: [15, 59, 60], textColor: [255, 255, 255], fontSize: 7, fontStyle: 'bold' },
       columnStyles: {
         0: { cellWidth: 8 },
-        1: { cellWidth: 28 },
-        2: { cellWidth: 30 },
-        3: { cellWidth: 32 },
-        4: { cellWidth: 12 },
-        5: { cellWidth: 16 },
+        1: { cellWidth: 30 },
+        2: { cellWidth: 32 },
+        3: { cellWidth: 12 },
+        4: { cellWidth: 16 },
+        5: { cellWidth: 22 },
         6: { cellWidth: 22 },
-        7: { cellWidth: 22 },
-        8: { cellWidth: 18 }
+        7: { cellWidth: 18 },
+        8: { cellWidth: 24 }
       },
-      margin: { top: 38, left: 10, right: 10 }
+      margin: { top: 38, left: 10, right: 10 },
+      didParseCell: function(data) {
+        // Resaltar filas de cabecera de grupo
+        if(data.section === 'body' && data.row.index % 10 === 0 && data.cell.raw && data.cell.raw.startsWith('B/L:')) {
+          data.cell.styles.fillColor = [15, 59, 60];
+          data.cell.styles.textColor = [255, 255, 255];
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.colSpan = 9;
+        }
+      }
     });
     
     const today = new Date().toISOString().slice(0,10);
     doc.save(`manifiesto-vehiculos-${today}.pdf`);
-    logMsg(`📄 PDF exportado: manifiesto-vehiculos-${today}.pdf`, 'ok');
+    logMsg(`📄 PDF exportado`, 'ok');
   } catch(e) {
     logMsg(`❌ Error exportando PDF: ${e.message}`, 'err');
     console.error(e);
@@ -1240,7 +1461,7 @@ document.getElementById('monthlyReportBtn').addEventListener('click', () => {
     groups[month][blKey].vins.push(r.vin || '(sin VIN)');
   });
 
-  const aoa = [['Mes', 'B/L', 'Buque', 'Consignatario', 'Cantidad', 'VINs']];
+  const aoa = [['Mes', 'B/L', 'Barco', 'Consignatario', 'Cantidad', 'VINs']];
   Object.keys(groups).sort().forEach(month => {
     Object.keys(groups[month]).forEach(bl => {
       const g = groups[month][bl];
@@ -1267,7 +1488,7 @@ async function renderPdfList(){
     return;
   }
   if(pdfRecords.length === 0){
-    listEl.innerHTML = '<p style="color:var(--text-dim);font-style:italic;">Aún no hay PDFs guardados en este dispositivo.</p>';
+    listEl.innerHTML = '<p style="color:var(--text-dim);font-style:italic;">Aún no hay PDFs guardados.</p>';
     return;
   }
   pdfRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -1304,7 +1525,7 @@ async function renderPdfList(){
   });
   listEl.querySelectorAll('[data-del-id]').forEach(btn => {
     btn.addEventListener('click', async () => {
-      if(confirm('¿Eliminar este PDF guardado? Esto no se puede deshacer.')){
+      if(confirm('¿Eliminar este PDF guardado?')){
         await deletePdfFromDB(Number(btn.dataset.delId));
         await listPdfsFromDB();
         renderPdfList();
@@ -1339,9 +1560,9 @@ function renderShipmentsSummary(){
     const g = groups[k];
     return `
       <div class="shipment-card">
-        <div class="line1">🚢 Conocimiento de Embarque (B/L): ${escapeHtml(g.bl)}</div>
+        <div class="line1">🚢 B/L: ${escapeHtml(g.bl)}</div>
         <div class="line2">
-          <span>Buque: ${escapeHtml(g.vessel || '—')}</span>
+          <span>Barco: ${escapeHtml(g.vessel || '—')}</span>
           <span>Fecha: ${escapeHtml(g.fecha || '—')}</span>
           <button class="btn-track-summary" data-bl="${escapeAttr(g.bl)}">🌐 Rastrear</button>
           <button class="btn-track-summary" style="background:var(--brass-dark);" data-view-pdf="${escapeAttr(g.bl)}">📎 Ver PDF</button>
@@ -1370,14 +1591,14 @@ document.getElementById('shipmentsSummary').addEventListener('click', e => {
 });
 
 function trackBL(bl){
-  if(!bl){ logMsg('No hay número de B/L para rastrear.', 'err'); return; }
+  if(!bl){ logMsg('No hay B/L para rastrear.', 'err'); return; }
   const prefix = bl.slice(0, 4).toUpperCase();
   const carrier = CARRIERS[prefix];
   if(carrier){
     logMsg(`🚢 Abriendo rastreo de ${carrier.name} para ${bl} ...`);
     window.open(carrier.url(bl), '_blank');
   } else {
-    logMsg(`🌐 Naviera no reconocida. Abriendo búsqueda general para ${bl}`, 'info');
+    logMsg(`🌐 Búsqueda general para ${bl}`, 'info');
     window.open(`https://www.google.com/search?q=tracking+bill+of+lading+${encodeURIComponent(bl)}`, '_blank');
   }
 }
@@ -1395,7 +1616,6 @@ async function init(){
   renderTable();
   renderShipmentsSummary();
   logMsg('💡 Listo. Sube un PDF o arrastra archivos al área.', 'info');
-  logMsg('🔍 Abre Eruda (círculo naranja) → Console para ver logs detallados', 'debug');
 }
 
 init();
