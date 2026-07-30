@@ -18,7 +18,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<!-- Tesseract.js para OCR -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
+  /* ... (mismos estilos que antes, sin cambios) ... */
   :root{
     --ink:#0F3B3C;
     --ink-deep:#0A2829;
@@ -45,7 +48,6 @@
     padding:32px 20px 80px;
   }
   .wrap{max-width:1200px;margin:0 auto;}
-
   header{
     display:flex;
     justify-content:space-between;
@@ -83,7 +85,6 @@
     white-space:nowrap;
   }
   .stamp b{color:var(--brass);}
-
   .dropzone{
     background:var(--paper);
     border:2px dashed var(--brass-dark);
@@ -106,7 +107,6 @@
   }
   .dropzone p{margin:0;color:var(--text-dim);font-size:13.5px;}
   .dropzone input{display:none;}
-
   #log{
     font-family:'JetBrains Mono',monospace;
     font-size:12px;
@@ -123,7 +123,7 @@
   #log .err{color:#E39A8A;}
   #log .ok{color:#7FDB7F;}
   #log .info{color:#7FDBFF;}
-
+  #log .warn{color:#FFD700;}
   .toolbar{
     display:flex;
     gap:10px;
@@ -161,7 +161,6 @@
     font-size:14px;
     pointer-events:none;
   }
-
   button{
     font-family:'Inter',sans-serif;
     font-weight:600;
@@ -190,7 +189,6 @@
     font-family:'Inter',sans-serif;
   }
   .btn-pdf-link:hover{filter:brightness(1.2);}
-
   .count-pill{
     margin-left:auto;
     font-family:'JetBrains Mono',monospace;
@@ -198,7 +196,6 @@
     color:var(--brass);
     align-self:center;
   }
-
   .ledger{
     background:var(--paper);
     border-radius:10px;
@@ -322,7 +319,6 @@
     font-family:'Inter',sans-serif;
   }
   .btn-track-summary:hover{filter:brightness(1.08);}
-
   .spinner-overlay{
     position:fixed;
     top:0;left:0;right:0;bottom:0;
@@ -339,6 +335,7 @@
     padding:40px 50px;
     border-radius:12px;
     text-align:center;
+    max-width:90%;
   }
   .spinner-box .spinner{
     width:48px;
@@ -350,7 +347,21 @@
     margin:0 auto 16px;
   }
   @keyframes spin{to{transform:rotate(360deg);}}
-
+  .spinner-box .progress-bar{
+    width:100%;
+    height:6px;
+    background:var(--paper-line);
+    border-radius:3px;
+    margin-top:12px;
+    overflow:hidden;
+  }
+  .spinner-box .progress-bar .fill{
+    height:100%;
+    background:var(--brass);
+    width:0%;
+    transition:width 0.3s;
+    border-radius:3px;
+  }
   .pdf-list-item{
     display:flex;
     align-items:center;
@@ -373,7 +384,6 @@
     color:var(--text-dim);
     font-size:11px;
   }
-
   footer.note{
     margin-top:16px;
     font-size:12px;
@@ -395,22 +405,23 @@
   <div class="spinner-overlay" id="spinnerOverlay">
     <div class="spinner-box">
       <div class="spinner"></div>
-      <div style="font-weight:600;color:var(--ink);">Procesando PDFs...</div>
-      <div style="font-size:12px;color:var(--text-dim);margin-top:6px;" id="spinnerStatus">Leyendo archivos</div>
+      <div style="font-weight:600;color:var(--ink);" id="spinnerTitle">Procesando PDFs...</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:6px;" id="spinnerStatus">Iniciando...</div>
+      <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
     </div>
   </div>
 
   <header>
     <div class="title-block">
       <h1>Manifiesto de Importación</h1>
-      <div class="sub">Control de Vehículos · Extracción desde PDF</div>
+      <div class="sub">Control de Vehículos · OCR para PDFs escaneados</div>
     </div>
     <div class="stamp">FOLIO AUTOMÁTICO<br><b>VIN · MARCA · MODELO · AÑO · BL</b></div>
   </header>
 
   <div class="dropzone" id="dropzone">
     <h3>📄 Toca aquí para seleccionar tus PDFs</h3>
-    <p>Se aceptan varios archivos a la vez · texto seleccionable (no escaneos)</p>
+    <p>Se aceptan varios archivos a la vez · PDFs escaneados (OCR automático)</p>
     <input type="file" id="fileInput" accept=".pdf,application/pdf" multiple>
   </div>
 
@@ -472,6 +483,9 @@
 <script>
 // ============ CONFIGURACIÓN ============
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+// Configurar Tesseract para español
+const TESSERACT_LANG = 'spa+eng';
 
 const BRANDS = ["Toyota","Honda","Nissan","Ford","Chevrolet","Hyundai","Kia","Mazda","BMW","Mercedes-Benz","Mercedes","Audi","Volkswagen","VW","Subaru","Mitsubishi","Suzuki","Lexus","Jeep","Dodge","Chrysler","RAM","GMC","Buick","Cadillac","Volvo","Land Rover","Porsche","Ferrari","Lamborghini","Maserati","Peugeot","Renault","Fiat","Isuzu","Great Wall","GWM","MG","Chery","Geely","BYD","JAC","Acura","Infiniti","Mini","Jaguar","Alfa Romeo","SEAT","Skoda","Tesla"];
 
@@ -594,6 +608,7 @@ function extractFields(text, filename){
   const vessel = extractVessel(text);
   const fecha = extractFecha(text);
 
+  // Patrón para "2026YM TOYOTA FORTUNER 2.7 WHITE CHASSIS NO: XXX"
   const vehicleLineRegex = /(\d{4})\s*YM\s+([A-Za-z][A-Za-z\-]*)\s+([\s\S]*?)\s*CHASSIS\s*NO\.?:?\s*([A-HJ-NPR-Z0-9]{17})/gi;
   const vehicleMatches = [...text.matchAll(vehicleLineRegex)];
 
@@ -614,50 +629,71 @@ function extractFields(text, filename){
     });
   }
 
+  // Extracción general de VINs
   const vinRegex = /\b[A-HJ-NPR-Z0-9]{17}\b/gi;
   const vins = [...new Set((text.match(vinRegex) || []).map(v => v.toUpperCase()))];
-  let marca = '';
-  const marcaMatch = text.match(/(?:Marca|Brand)\s*[:\-]?\s*([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\-\s]{1,25}?)(?=\s{2,}|\n|,|\.|Modelo|Model|$)/i);
-  if(marcaMatch) marca = marcaMatch[1].trim();
-  if(!marca){
-    const found = BRANDS.find(b => new RegExp(`\\b${b.replace('.', '\\.')}\\b`, 'i').test(text));
-    if(found) marca = found;
-  }
-  let modelo = '';
-  const modeloMatch = text.match(/(?:Modelo|Model)\s*[:\-]?\s*([A-Za-z0-9À-ÿ][A-Za-z0-9À-ÿ\-\s]{0,20}?)(?=\s{2,}|\n|,|\.|Año|Year|$)/i);
-  if(modeloMatch) modelo = modeloMatch[1].trim();
-  const marcaModelo = [marca, modelo].filter(Boolean).join(' ').trim();
-  let anio = '';
-  const anioMatch = text.match(/(?:A[ñn]o(?:\s*Modelo)?|Model\s*Year|Year)\s*[:\-]?\s*((?:19|20)\d{2})/i);
-  if(anioMatch) anio = anioMatch[1];
-  if(!anio){
-    const anyYear = text.match(/\b(19[8-9]\d|20[0-3]\d)\b/);
-    if(anyYear) anio = anyYear[1];
-  }
-  let color = '';
-  const colorMatch = text.match(/(?:Color|Colour)\s*[:\-]?\s*([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\-\s]{1,20}?)(?=\s{2,}|\n|,|\.|$)/i);
-  if(colorMatch) color = colorMatch[1].trim();
+  
   if(vins.length === 0) return [];
   
   return vins.map(vin => {
-    let finalAnio = anio;
+    let finalAnio = '';
     let anioFromVin = false;
-    if(!finalAnio){
-      const vinYear = decodeVinYear(vin);
-      if(vinYear){ finalAnio = vinYear; anioFromVin = true; }
+    const vinYear = decodeVinYear(vin);
+    if(vinYear){ finalAnio = vinYear; anioFromVin = true; }
+    
+    // Intentar encontrar marca/modelo cerca del VIN
+    let marcaModelo = '';
+    let color = '';
+    const contextRegex = new RegExp(`[\\s\\S]{0,100}${vin}[\\s\\S]{0,100}`, 'i');
+    const contextMatch = text.match(contextRegex);
+    if(contextMatch){
+      const ctx = contextMatch[0];
+      const brandFound = BRANDS.find(b => new RegExp(`\\b${b.replace('.', '\\.')}\\b`, 'i').test(ctx));
+      if(brandFound) marcaModelo = brandFound;
+      const colorFound = COLORS.find(c => new RegExp(`\\b${c}\\b`, 'i').test(ctx));
+      if(colorFound) color = colorFound.charAt(0) + colorFound.slice(1).toLowerCase();
     }
+    
     return { vin, marcaModelo, anio: finalAnio, anioFromVin, color, consignatario, bl, vessel, fecha };
   });
 }
 
-async function extractPdfText(file){
+// ============ EXTRACCIÓN CON OCR ============
+async function extractPdfTextWithOCR(file){
   const buf = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
   let fullText = '';
+  
   for(let i = 1; i <= pdf.numPages; i++){
     const page = await pdf.getPage(i);
+    const viewport = page.getViewport({ scale: 1.5 });
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    
+    await page.render({ canvasContext: context, viewport: viewport }).promise;
+    
+    // Intentar extraer texto nativo primero
     const content = await page.getTextContent();
-    fullText += content.items.map(it => it.str).join(' ') + '\n';
+    const nativeText = content.items.map(it => it.str).join(' ');
+    
+    if(nativeText.trim().length > 50){
+      fullText += nativeText + '\n';
+    } else {
+      // Si no hay texto nativo, usar OCR
+      const imageData = canvas.toDataURL('image/png');
+      const result = await Tesseract.recognize(imageData, TESSERACT_LANG, {
+        logger: m => {
+          if(m.status === 'recognizing text'){
+            const progress = Math.round((m.progress || 0) * 100);
+            document.getElementById('spinnerStatus').textContent = `OCR página ${i}/${pdf.numPages}: ${progress}%`;
+            document.getElementById('progressFill').style.width = `${(i-1 + (m.progress||0)) / pdf.numPages * 100}%`;
+          }
+        }
+      });
+      fullText += result.data.text + '\n';
+    }
   }
   return fullText;
 }
@@ -692,6 +728,8 @@ const countPill = document.getElementById('countPill');
 const searchInput = document.getElementById('searchInput');
 const spinnerOverlay = document.getElementById('spinnerOverlay');
 const spinnerStatus = document.getElementById('spinnerStatus');
+const spinnerTitle = document.getElementById('spinnerTitle');
+const progressFill = document.getElementById('progressFill');
 
 function logMsg(msg, cls){
   const line = document.createElement('div');
@@ -788,14 +826,22 @@ async function handleFiles(fileList){
 
   logMsg(`📄 Procesando ${files.length} archivo(s)...`, 'info');
   spinnerOverlay.classList.add('active');
+  spinnerTitle.textContent = 'Procesando PDFs con OCR...';
+  progressFill.style.width = '0%';
   await listPdfsFromDB();
 
   for(let i = 0; i < files.length; i++){
     const file = files[i];
-    spinnerStatus.textContent = `Procesando ${i+1}/${files.length}: ${file.name}`;
+    spinnerStatus.textContent = `Leyendo ${i+1}/${files.length}: ${file.name}`;
+    progressFill.style.width = `${(i / files.length) * 50}%`;
+    
     try{
       logMsg(`📄 Leyendo: ${file.name} ...`, 'info');
-      const text = await extractPdfText(file);
+      const text = await extractPdfTextWithOCR(file);
+      
+      // Debug: mostrar texto extraído
+      console.log(`Texto extraído de ${file.name}:`, text.substring(0, 500));
+      
       const extracted = extractFields(text, file.name);
       
       let blForFile = extracted.length > 0 ? extracted[0].bl : '';
@@ -807,7 +853,9 @@ async function handleFiles(fileList){
         const newRowData = newRow(file.name, {});
         if(blForFile) newRowData.bl = blForFile;
         rows.push(newRowData);
-        logMsg(`⚠ ${file.name}: no se detectó VIN, se agregó fila vacía.`, 'err');
+        logMsg(`⚠ ${file.name}: no se detectó VIN, se agregó fila vacía.`, 'warn');
+        // Mostrar texto para debug
+        logMsg(`📝 Texto extraído (primeros 200 chars): ${text.substring(0, 200)}...`, 'info');
       } else {
         extracted.forEach(fields => {
           const newRowData = newRow(file.name, fields);
@@ -815,6 +863,10 @@ async function handleFiles(fileList){
           rows.push(newRowData);
         });
         logMsg(`✅ ${file.name}: ${extracted.length} vehículo(s) detectado(s).`, 'ok');
+        // Mostrar los datos detectados
+        extracted.forEach((f, idx) => {
+          logMsg(`   🚗 ${idx+1}: ${f.marcaModelo} | VIN: ${f.vin} | Año: ${f.anio} | Color: ${f.color || '—'}`, 'info');
+        });
       }
     } catch(err){
       console.error(err);
@@ -1266,7 +1318,7 @@ async function init(){
   await listPdfsFromDB();
   renderTable();
   renderShipmentsSummary();
-  logMsg('💡 Listo. Sube un PDF o arrastra archivos al área.', 'info');
+  logMsg('💡 Listo. Sube un PDF o arrastra archivos al área. (OCR activado para PDFs escaneados)', 'info');
 }
 
 init();
