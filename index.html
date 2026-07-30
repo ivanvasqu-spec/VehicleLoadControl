@@ -16,6 +16,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <style>
   :root{
     --ink:#0F3B3C;
@@ -42,15 +44,94 @@
     min-height:100vh;
     padding:32px 20px 80px;
   }
-  .wrap{max-width:1100px;margin:0 auto;}
+  .wrap{max-width:1200px;margin:0 auto;}
 
-  /* Resto de estilos (mantengo los tuyos, solo añado) */
-  
-  /* NUEVOS ESTILOS MEJORADOS */
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:20px;
+    padding-bottom:20px;
+    border-bottom:2px solid var(--brass);
+    margin-bottom:28px;
+  }
+  .title-block h1{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:clamp(28px,4vw,42px);
+    color:var(--paper);
+    margin:0 0 4px;
+    letter-spacing:0.3px;
+  }
+  .title-block .sub{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--brass);
+  }
+  .stamp{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--paper);
+    border:1.5px solid var(--brass);
+    border-radius:4px;
+    padding:8px 14px;
+    line-height:1.6;
+    opacity:0.85;
+    white-space:nowrap;
+  }
+  .stamp b{color:var(--brass);}
+
+  .dropzone{
+    background:var(--paper);
+    border:2px dashed var(--brass-dark);
+    border-radius:10px;
+    padding:32px 24px;
+    text-align:center;
+    cursor:pointer;
+    transition:background 0.15s, border-color 0.15s;
+    margin-bottom:18px;
+  }
+  .dropzone:hover, .dropzone.drag{
+    background:#F5EFE0;
+    border-color:var(--brass);
+  }
+  .dropzone h3{
+    margin:0 0 6px;
+    font-family:'Fraunces',serif;
+    font-size:19px;
+    color:var(--ink);
+  }
+  .dropzone p{margin:0;color:var(--text-dim);font-size:13.5px;}
+  .dropzone input{display:none;}
+
+  #log{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--paper);
+    opacity:0.75;
+    margin:0 0 20px;
+    min-height:16px;
+    max-height:120px;
+    overflow-y:auto;
+  }
+  #log .err{color:#E39A8A;}
+  #log .ok{color:#9FCB9F;}
+  #log .info{color:#A8C8E8;}
+
+  .toolbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:14px;
+    align-items:center;
+  }
   .search-box{
     position:relative;
     flex:1;
-    min-width:200px;
+    min-width:180px;
   }
   .search-box input{
     width:100%;
@@ -77,18 +158,168 @@
     font-size:14px;
     pointer-events:none;
   }
-  
+
+  button{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    border:none;
+    border-radius:6px;
+    padding:10px 16px;
+    cursor:pointer;
+    transition:transform 0.1s, filter 0.15s;
+  }
+  button:active{transform:scale(0.97);}
+  .btn-primary{background:var(--brass);color:var(--ink-deep);}
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-primary:disabled{background:#6b6455;color:#a49f92;cursor:not-allowed;}
+  .btn-ghost{background:transparent;color:var(--paper);border:1px solid rgba(239,231,214,0.35);}
+  .btn-ghost:hover{border-color:var(--brass);color:var(--brass);}
+  .btn-small{font-size:11px;padding:6px 10px;}
+  .btn-pdf-link{
+    background:var(--brass-dark);
+    color:#fff;
+    border:none;
+    border-radius:4px;
+    padding:2px 8px;
+    font-size:11px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .btn-pdf-link:hover{filter:brightness(1.2);}
+
+  .count-pill{
+    margin-left:auto;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--brass);
+    align-self:center;
+  }
+
+  .ledger{
+    background:var(--paper);
+    border-radius:10px;
+    overflow-x:auto;
+    box-shadow:0 12px 30px rgba(0,0,0,0.35);
+  }
+  table{width:100%;min-width:1200px;border-collapse:collapse;}
+  thead th{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    letter-spacing:0.5px;
+    text-transform:uppercase;
+    text-align:left;
+    color:var(--paper);
+    background:var(--ink);
+    padding:10px 8px;
+    white-space:nowrap;
+    position:sticky;
+    top:0;
+    z-index:10;
+  }
+  tbody td{
+    padding:0;
+    border-bottom:1px solid var(--paper-line);
+    font-size:12.5px;
+  }
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:nth-child(even){background:rgba(0,0,0,0.02);}
+  td .cell-input{
+    width:100%;
+    border:none;
+    background:transparent;
+    padding:8px 6px;
+    font-family:inherit;
+    font-size:12.5px;
+    color:var(--text);
+  }
+  td .cell-input:focus{
+    outline:2px solid var(--brass);
+    outline-offset:-2px;
+    background:#fff;
+    border-radius:2px;
+  }
+  td.vin-cell .cell-input{font-family:'JetBrains Mono',monospace;font-size:11px;}
+  td.file-cell{
+    color:var(--text-dim);
+    font-size:10.5px;
+    max-width:120px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    padding:6px;
+  }
+  td.del-cell{text-align:center;padding:0 4px;}
+  td.del-cell button{
+    background:none;border:none;color:var(--rust);font-size:16px;cursor:pointer;padding:6px;line-height:1;
+  }
+  td.del-cell button:hover{color:#B5493A;}
+  .warn-badge{
+    display:inline-block;
+    font-family:'JetBrains Mono',monospace;
+    font-size:8px;
+    color:#fff;
+    background:var(--rust);
+    padding:1px 4px;
+    border-radius:3px;
+    margin-left:4px;
+    vertical-align:middle;
+  }
   .duplicate-badge{
     display:inline-block;
     background:#C0392B;
     color:#fff;
-    font-size:9px;
-    padding:1px 6px;
+    font-size:8px;
+    padding:1px 5px;
     border-radius:10px;
     margin-left:4px;
     font-weight:700;
   }
-  
+  td .cell-input.highlight-duplicate{
+    background:rgba(192,57,43,0.08);
+    border-left:2px solid #C0392B;
+  }
+  .empty-row td{
+    padding:36px 20px;
+    text-align:center;
+    color:var(--text-dim);
+    font-size:13.5px;
+    font-style:italic;
+  }
+  .shipment-card{
+    background:var(--paper);
+    border-radius:8px;
+    padding:12px 14px;
+    margin-bottom:10px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    color:var(--text);
+  }
+  .shipment-card .line1{
+    font-weight:700;
+    color:var(--ink);
+    margin-bottom:6px;
+  }
+  .shipment-card .line2{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    color:var(--text-dim);
+  }
+  .btn-track-summary{
+    background:var(--brass);
+    color:var(--ink-deep);
+    border:none;
+    border-radius:5px;
+    padding:5px 10px;
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .btn-track-summary:hover{filter:brightness(1.08);}
+
   .spinner-overlay{
     position:fixed;
     top:0;left:0;right:0;bottom:0;
@@ -116,38 +347,48 @@
     margin:0 auto 16px;
   }
   @keyframes spin{to{transform:rotate(360deg);}}
-  
-  .toolbar{
+
+  .pdf-list-item{
     display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    margin-bottom:14px;
     align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:8px 10px;
+    background:#fff;
+    border-radius:6px;
+    margin-bottom:6px;
   }
-  
-  .btn-group{
-    display:flex;
-    gap:6px;
-    flex-wrap:wrap;
+  .pdf-list-item .info{
+    font-size:12.5px;
+    color:var(--text);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    flex:1;
   }
-  
-  .btn-small{
+  .pdf-list-item .info .meta{
+    color:var(--text-dim);
     font-size:11px;
-    padding:6px 10px;
   }
-  
-  td .cell-input.highlight-duplicate{
-    background:rgba(192,57,43,0.08);
-    border-left:2px solid #C0392B;
+
+  footer.note{
+    margin-top:16px;
+    font-size:12px;
+    color:rgba(239,231,214,0.55);
+    line-height:1.6;
   }
-  
-  /* Resto de estilos (los tuyos se mantienen) */
+  footer.note kbd{
+    background:rgba(239,231,214,0.12);
+    padding:1px 6px;
+    border-radius:3px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <!-- SPINNER DE CARGA -->
   <div class="spinner-overlay" id="spinnerOverlay">
     <div class="spinner-box">
       <div class="spinner"></div>
@@ -161,11 +402,11 @@
       <h1>Manifiesto de Importación</h1>
       <div class="sub">Control de Vehículos · Extracción desde PDF</div>
     </div>
-    <div class="stamp">FOLIO AUTOMÁTICO<br><b>VIN · MARCA · MODELO · AÑO · VALOR</b></div>
+    <div class="stamp">FOLIO AUTOMÁTICO<br><b>VIN · MARCA · MODELO · AÑO · BL</b></div>
   </header>
 
   <label class="dropzone" id="dropzone" for="fileInput">
-    <h3>Toca aquí para seleccionar tus PDFs</h3>
+    <h3>📄 Toca aquí para seleccionar tus PDFs</h3>
     <p>Se aceptan varios archivos a la vez · texto seleccionable (no escaneos)</p>
     <input type="file" id="fileInput" accept="application/pdf,.pdf" multiple>
   </label>
@@ -177,9 +418,9 @@
       <span class="icon">🔍</span>
       <input type="text" id="searchInput" placeholder="Buscar en todos los campos...">
     </div>
-    <div class="btn-group">
+    <div class="btn-group" style="display:flex;gap:6px;flex-wrap:wrap;">
       <button class="btn-primary" id="exportBtn" disabled>📊 Excel</button>
-      <button class="btn-ghost btn-small" id="exportCsvBtn">📄 CSV</button>
+      <button class="btn-primary" id="exportPdfBtn" disabled style="background:#8B3A2B;">📄 PDF</button>
       <button class="btn-ghost btn-small" id="monthlyReportBtn">📈 Mensual</button>
       <button class="btn-ghost btn-small" id="pdfPanelBtn">📁 PDFs</button>
       <button class="btn-ghost btn-small" id="addRowBtn">➕ Agregar</button>
@@ -194,28 +435,31 @@
 
   <div id="shipmentsSummary"></div>
 
-  <div class="ledger">
+  <div class="ledger" style="max-height:600px;overflow-y:auto;">
     <table>
       <thead>
         <tr>
-          <th style="width:36px;">#</th>
-          <th style="width:190px;">Consignatario</th>
-          <th style="width:190px;">Marca y Modelo</th>
-          <th style="width:180px;">VIN / Chasis</th>
-          <th style="width:70px;">Año</th>
-          <th style="width:110px;">Color</th>
-          <th style="width:120px;">Archivo</th>
-          <th style="width:36px;"></th>
+          <th style="width:28px;">#</th>
+          <th style="width:130px;">Consignatario</th>
+          <th style="width:150px;">Marca y Modelo</th>
+          <th style="width:160px;">VIN / Chasis</th>
+          <th style="width:55px;">Año</th>
+          <th style="width:80px;">Color</th>
+          <th style="width:110px;">B/L</th>
+          <th style="width:110px;">Buque</th>
+          <th style="width:80px;">Fecha</th>
+          <th style="width:100px;">Archivo</th>
+          <th style="width:28px;"></th>
         </tr>
       </thead>
       <tbody id="tbody">
-        <tr class="empty-row"><td colspan="8">Aún no hay vehículos registrados. Sube un PDF para comenzar.</td></tr>
+        <tr class="empty-row"><td colspan="11">Aún no hay vehículos registrados. Sube un PDF para comenzar.</td></tr>
       </tbody>
     </table>
   </div>
 
   <footer class="note">
-    La extracción es automática y heurística. <kbd>Ctrl+Shift+A</kbd> para agregar fila. Los VINs duplicados se resaltan automáticamente.
+    <kbd>Ctrl+Shift+A</kbd> para agregar fila · Los VINs duplicados se resaltan · Haz clic en 📎 para ver el PDF original
   </footer>
 
 </div>
@@ -223,7 +467,10 @@
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
+// ============ CONFIGURACIÓN ============
 const BRANDS = ["Toyota","Honda","Nissan","Ford","Chevrolet","Hyundai","Kia","Mazda","BMW","Mercedes-Benz","Mercedes","Audi","Volkswagen","VW","Subaru","Mitsubishi","Suzuki","Lexus","Jeep","Dodge","Chrysler","RAM","GMC","Buick","Cadillac","Volvo","Land Rover","Porsche","Ferrari","Lamborghini","Maserati","Peugeot","Renault","Fiat","Isuzu","Great Wall","GWM","MG","Chery","Geely","BYD","JAC","Acura","Infiniti","Mini","Jaguar","Alfa Romeo","SEAT","Skoda","Tesla"];
+
+const COLORS = ['WHITE','BLACK','GRAY','GREY','SILVER','RED','BLUE','GREEN','YELLOW','BROWN','BEIGE','GOLD','MAROON','ORANGE','PURPLE','PEARL','CHAMPAGNE','BRONZE','NAVY','CREAM'];
 
 const CARRIERS = {
   'MAEU': { name: 'Maersk', url: bl => `https://www.maersk.com/tracking/${bl}` },
@@ -240,48 +487,56 @@ const CARRIERS = {
   'PABV': { name: 'PIL', url: bl => `https://www.pilship.com/en-tracking/index/index.html?billOfLadingNo=${bl}` },
 };
 
-// --- FUNCIONES UTILITARIAS ---
-function trackBL(bl){
-  if(!bl){ logMsg('No hay número de B/L para rastrear.', 'err'); return; }
-  const prefix = bl.slice(0, 4).toUpperCase();
-  const carrier = CARRIERS[prefix];
-  if(carrier){
-    logMsg(`Abriendo rastreo de ${carrier.name} para ${bl} ...`);
-    window.open(carrier.url(bl), '_blank');
-  } else {
-    logMsg(`Naviera no reconocida para "${prefix}". Abriendo búsqueda general.`, 'err');
-    window.open(`https://www.google.com/search?q=tracking+bill+of+lading+${encodeURIComponent(bl)}`, '_blank');
-  }
+// ============ FUNCIONES DE EXTRACCIÓN ============
+function extractBLFromFilename(filename){
+  if(!filename) return '';
+  const match = filename.match(/^(\d{6,15})/);
+  if(match) return match[1];
+  const anyMatch = filename.match(/\b(\d{6,15})\b/);
+  return anyMatch ? anyMatch[1] : '';
 }
 
-// --- VALIDACIÓN VIN CON CHECKSUM (ISO 3779) ---
-function validateVin(vin){
-  if(!vin || vin.length !== 17) return false;
-  const vinUpper = vin.toUpperCase();
-  if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(vinUpper)) return false;
-  
-  const transliterations = {
-    'A':1,'B':2,'C':3,'D':4,'E':5,'F':6,'G':7,'H':8,
-    'J':1,'K':2,'L':3,'M':4,'N':5,'P':7,'R':9,
-    'S':2,'T':3,'U':4,'V':5,'W':6,'X':7,'Y':8,'Z':9
-  };
-  const weights = [8,7,6,5,4,3,2,10,0,9,8,7,6,5,4,3,2];
-  
-  let sum = 0;
-  for(let i = 0; i < 17; i++){
-    const char = vinUpper[i];
-    let value;
-    if(/[0-9]/.test(char)){
-      value = parseInt(char);
-    } else {
-      value = transliterations[char];
-    }
-    if(value === undefined) return false;
-    sum += value * weights[i];
+function extractConsignatario(text){
+  let m = text.match(/(?:Consignee|Consignatario)\s*(?:\([^)]*\))?\.?\s*(?:As principal[^\n]*?\.)?\s*([A-Z][A-Za-zÀ-ÿ0-9.,&\-\s]{2,60}?)(?=\n|RIF|ADDRESS|TEL|EMAIL|$)/i);
+  if(m) return m[1].trim().replace(/,$/,'');
+  const invoiceMatch = text.match(/Invoice\s*Party\s*([A-Za-zÀ-ÿ\s]{3,30}?)(?=\s*\d{8,15}|$)/i);
+  if(invoiceMatch) return invoiceMatch[1].trim();
+  const freightMatch = text.match(/Freight\s*(?:&|and)\s*Charges[^]*?([A-Z][A-Za-zÀ-ÿ\s]{3,30}?)(?=\s*\d{8,15})/i);
+  if(freightMatch) return freightMatch[1].trim();
+  return '';
+}
+
+function extractBL(text, filename){
+  if(filename){
+    const fromFilename = extractBLFromFilename(filename);
+    if(fromFilename) return fromFilename;
   }
-  const checkDigit = sum % 11;
-  const expectedCheck = checkDigit === 10 ? 'X' : String(checkDigit);
-  return vinUpper[8] === expectedCheck;
+  const watermarkSkip = /(?:VERIFY|COPY|DRAFT|ORIGINAL|SAMPLE|NOT NEGOTIABLE)\s*/gi;
+  const cleanText = text.replace(watermarkSkip, ' ');
+  
+  let m = cleanText.match(/(?:B\/?L\s*(?:No\.?)?|Bill\s*of\s*Lading(?:\s*No\.?)?|Conocimiento\s*de\s*Embarque(?:\s*No\.?)?)\s*[:\-]?\s*([A-Z]{0,4}\d{5,15})/i);
+  if(m) return m[1].trim();
+  const tableBL = cleanText.match(/Customer\s*Code\s*(\d{8,15})/i);
+  if(tableBL) return tableBL[1].trim();
+  const invoiceBL = cleanText.match(/Invoice\s*Party[^]*?(\d{8,15})/i);
+  if(invoiceBL) return invoiceBL[1].trim();
+  const numericBL = cleanText.match(/\b(\d{6,15})\b/);
+  if(numericBL) return numericBL[1].trim();
+  const booking = text.match(/Booking\s*No\.?\s*[:\-]?\s*([A-Z0-9]{6,15})/i);
+  if(booking) return booking[1].trim();
+  return '';
+}
+
+function extractVessel(text){
+  const m = text.match(/(?:Vessel|Buque|B\/V|M\/V)\s*(?:\([^)]*\))?\s*[:\-]?\s*([A-Za-zÀ-ÿ0-9\-\s]{2,30}?)(?=\s{2,}|\n|,|Voyage|Viaje|Place|\.|$)/i);
+  return m ? m[1].trim() : '';
+}
+
+function extractFecha(text){
+  const m = text.match(/(?:Fecha(?:\s*de\s*(?:Embarque|Zarpe|Salida))?|Date)\s*[:\-]?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i);
+  if(m) return m[1];
+  const any = text.match(/\b(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\b/);
+  return any ? any[1] : '';
 }
 
 const VIN_YEAR_CODES = {
@@ -304,142 +559,36 @@ function decodeVinYear(vin){
   return String(Math.max(...valid));
 }
 
-// --- ESTADO GLOBAL ---
-let rows = [];
-let rowIdCounter = 0;
-let filterText = '';
-const STORAGE_KEY = 'manifiesto-vehiculos-rows-v1';
-
-function saveRows(){
-  try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
-  } catch(e){ console.error('No se pudo guardar:', e); }
+function validateVin(vin){
+  if(!vin || vin.length !== 17) return false;
+  const vinUpper = vin.toUpperCase();
+  if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(vinUpper)) return false;
+  const transliterations = {
+    'A':1,'B':2,'C':3,'D':4,'E':5,'F':6,'G':7,'H':8,
+    'J':1,'K':2,'L':3,'M':4,'N':5,'P':7,'R':9,
+    'S':2,'T':3,'U':4,'V':5,'W':6,'X':7,'Y':8,'Z':9
+  };
+  const weights = [8,7,6,5,4,3,2,10,0,9,8,7,6,5,4,3,2];
+  let sum = 0;
+  for(let i = 0; i < 17; i++){
+    const char = vinUpper[i];
+    let value;
+    if(/[0-9]/.test(char)){ value = parseInt(char); }
+    else { value = transliterations[char]; }
+    if(value === undefined) return false;
+    sum += value * weights[i];
+  }
+  const checkDigit = sum % 11;
+  const expectedCheck = checkDigit === 10 ? 'X' : String(checkDigit);
+  return vinUpper[8] === expectedCheck;
 }
 
-function loadRows(){
-  try{
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if(stored){
-      rows = JSON.parse(stored);
-      rowIdCounter = rows.reduce((max, r) => Math.max(max, r.id || 0), 0);
-    }
-  } catch(e){ console.error('No se pudo cargar:', e); }
-}
-
-// --- ELEMENTOS DOM ---
-const tbody = document.getElementById('tbody');
-const logEl = document.getElementById('log');
-const dropzone = document.getElementById('dropzone');
-const fileInput = document.getElementById('fileInput');
-const exportBtn = document.getElementById('exportBtn');
-const countPill = document.getElementById('countPill');
-const searchInput = document.getElementById('searchInput');
-const spinnerOverlay = document.getElementById('spinnerOverlay');
-const spinnerStatus = document.getElementById('spinnerStatus');
-
-// --- LOG ---
-function logMsg(msg, cls){
-  const line = document.createElement('div');
-  if(cls) line.className = cls;
-  line.textContent = msg;
-  logEl.appendChild(line);
-  logEl.scrollTop = logEl.scrollTopMax || logEl.scrollHeight;
-}
-
-// --- PROCESAMIENTO DE PDFs (MEJORADO CON PARALELISMO) ---
-dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
-dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
-dropzone.addEventListener('drop', e => {
-  e.preventDefault();
-  dropzone.classList.remove('drag');
-  handleFiles(e.dataTransfer.files);
-});
-fileInput.addEventListener('change', e => handleFiles(e.target.files));
-
-// --- INDEXED DB (MANTENIDO) ---
-const DB_NAME = 'manifiestoVehiculosDB';
-const DB_VERSION = 1;
-const PDF_STORE = 'pdfs';
-
-function openPdfDB(){
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = e => {
-      const db = e.target.result;
-      if(!db.objectStoreNames.contains(PDF_STORE)){
-        db.createObjectStore(PDF_STORE, { keyPath: 'id', autoIncrement: true });
-      }
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function savePdfToDB(file, bl){
-  try{
-    const db = await openPdfDB();
-    const arrayBuffer = await file.arrayBuffer();
-    const record = { name: file.name, bl: bl || 'Sin B/L', date: new Date().toISOString(), size: file.size, data: arrayBuffer };
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(PDF_STORE, 'readwrite');
-      tx.objectStore(PDF_STORE).add(record);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  } catch(e){ console.error('No se pudo guardar el PDF:', e); }
-}
-
-// --- EXTRACCIÓN DE TEXTO Y CAMPOS (OPTIMIZADA) ---
-const COLORS = ['WHITE','BLACK','GRAY','GREY','SILVER','RED','BLUE','GREEN','YELLOW','BROWN','BEIGE','GOLD','MAROON','ORANGE','PURPLE','PEARL','CHAMPAGNE','BRONZE','NAVY','CREAM'];
-
-// Cache de regex para mejorar rendimiento
-const REGEX_CACHE = {
-  consignatario: /(?:Consignee|Consignatario)\s*(?:\([^)]*\))?\.?\s*(?:As principal[^\n]*?\.)?\s*([A-Z][A-Za-zÀ-ÿ0-9.,&\-\s]{2,60}?)(?=\n|RIF|ADDRESS|TEL|EMAIL|$)/i,
-  bl: /(?:B\/?L\s*(?:No\.?)?|Bill\s*of\s*Lading(?:\s*No\.?)?|Conocimiento\s*de\s*Embarque(?:\s*No\.?)?)\s*[:\-]?\s*([A-Z]{0,4}\d{5,15})/i,
-  booking: /Booking\s*No\.?\s*[:\-]?\s*([A-Z]{0,4}\d{5,15})/i,
-  vessel: /(?:Vessel|Buque|B\/V|M\/V)\s*(?:\([^)]*\))?\s*[:\-]?\s*([A-Za-zÀ-ÿ0-9\-\s]{2,30}?)(?=\s{2,}|\n|,|Voyage|Viaje|Place|\.|$)/i,
-  fecha: /(?:Fecha(?:\s*de\s*(?:Embarque|Zarpe|Salida))?|Date)\s*[:\-]?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
-  fechaAny: /\b(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\b/,
-  yearLabel: /(?:A[ñn]o(?:\s*Modelo)?|Model\s*Year|Year)\s*[:\-]?\s*((?:19|20)\d{2})/i,
-  yearAny: /\b(19[8-9]\d|20[0-3]\d)\b/,
-  colorLabel: /(?:Color|Colour)\s*[:\-]?\s*([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\-\s]{1,20}?)(?=\s{2,}|\n|,|\.|$)/i,
-  marcaLabel: /(?:Marca|Brand)\s*[:\-]?\s*([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\-\s]{1,25}?)(?=\s{2,}|\n|,|\.|Modelo|Model|$)/i,
-  modeloLabel: /(?:Modelo|Model)\s*[:\-]?\s*([A-Za-z0-9À-ÿ][A-Za-z0-9À-ÿ\-\s]{0,20}?)(?=\s{2,}|\n|,|\.|Año|Year|$)/i,
-};
-
-function extractConsignatario(text){
-  const m = text.match(REGEX_CACHE.consignatario);
-  return m ? m[1].trim().replace(/,$/,'') : '';
-}
-
-function extractBL(text){
-  const watermarkSkip = /(?:VERIFY|COPY|DRAFT|ORIGINAL|SAMPLE|NOT NEGOTIABLE)\s*/gi;
-  const cleanText = text.replace(watermarkSkip, ' ');
-  let m = cleanText.match(REGEX_CACHE.bl);
-  if(m) return m[1].trim();
-  const booking = text.match(REGEX_CACHE.booking);
-  return booking ? booking[1].trim() : '';
-}
-
-function extractVessel(text){
-  const m = text.match(REGEX_CACHE.vessel);
-  return m ? m[1].trim() : '';
-}
-
-function extractFecha(text){
-  const m = text.match(REGEX_CACHE.fecha);
-  if(m) return m[1];
-  const any = text.match(REGEX_CACHE.fechaAny);
-  return any ? any[1] : '';
-}
-
-function extractFields(text){
+function extractFields(text, filename){
   const consignatario = extractConsignatario(text);
-  const bl = extractBL(text);
+  const bl = extractBL(text, filename);
   const vessel = extractVessel(text);
   const fecha = extractFecha(text);
 
-  // Patrón específico para líneas de vehículos con formato YM
   const vehicleLineRegex = /(\d{4})\s*YM\s+([A-Za-z][A-Za-z\-]*)\s+([\s\S]*?)\s*CHASSIS\s*NO\.?:?\s*([A-HJ-NPR-Z0-9]{17})/gi;
   const vehicleMatches = [...text.matchAll(vehicleLineRegex)];
 
@@ -460,35 +609,29 @@ function extractFields(text){
     });
   }
 
-  // Extracción general
   const vinRegex = /\b[A-HJ-NPR-Z0-9]{17}\b/gi;
   const vins = [...new Set((text.match(vinRegex) || []).map(v => v.toUpperCase()))];
-
   let marca = '';
-  const marcaMatch = text.match(REGEX_CACHE.marcaLabel);
+  const marcaMatch = text.match(/(?:Marca|Brand)\s*[:\-]?\s*([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\-\s]{1,25}?)(?=\s{2,}|\n|,|\.|Modelo|Model|$)/i);
   if(marcaMatch) marca = marcaMatch[1].trim();
   if(!marca){
     const found = BRANDS.find(b => new RegExp(`\\b${b.replace('.', '\\.')}\\b`, 'i').test(text));
     if(found) marca = found;
   }
-
   let modelo = '';
-  const modeloMatch = text.match(REGEX_CACHE.modeloLabel);
+  const modeloMatch = text.match(/(?:Modelo|Model)\s*[:\-]?\s*([A-Za-z0-9À-ÿ][A-Za-z0-9À-ÿ\-\s]{0,20}?)(?=\s{2,}|\n|,|\.|Año|Year|$)/i);
   if(modeloMatch) modelo = modeloMatch[1].trim();
   const marcaModelo = [marca, modelo].filter(Boolean).join(' ').trim();
-
   let anio = '';
-  const anioMatch = text.match(REGEX_CACHE.yearLabel);
+  const anioMatch = text.match(/(?:A[ñn]o(?:\s*Modelo)?|Model\s*Year|Year)\s*[:\-]?\s*((?:19|20)\d{2})/i);
   if(anioMatch) anio = anioMatch[1];
   if(!anio){
-    const anyYear = text.match(REGEX_CACHE.yearAny);
+    const anyYear = text.match(/\b(19[8-9]\d|20[0-3]\d)\b/);
     if(anyYear) anio = anyYear[1];
   }
-
   let color = '';
-  const colorMatch = text.match(REGEX_CACHE.colorLabel);
+  const colorMatch = text.match(/(?:Color|Colour)\s*[:\-]?\s*([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\-\s]{1,20}?)(?=\s{2,}|\n|,|\.|$)/i);
   if(colorMatch) color = colorMatch[1].trim();
-
   if(vins.length === 0) return [];
   
   return vins.map(vin => {
@@ -514,7 +657,124 @@ async function extractPdfText(file){
   return fullText;
 }
 
-// --- MANEJO DE ARCHIVOS (PARALELIZADO) ---
+// ============ ESTADO GLOBAL ============
+let rows = [];
+let rowIdCounter = 0;
+let filterText = '';
+const STORAGE_KEY = 'manifiesto-vehiculos-rows-v1';
+let pdfRecords = []; // Cache de PDFs guardados
+
+function saveRows(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(rows)); } 
+  catch(e){ console.error('No se pudo guardar:', e); }
+}
+
+function loadRows(){
+  try{
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if(stored){ rows = JSON.parse(stored); rowIdCounter = rows.reduce((max, r) => Math.max(max, r.id || 0), 0); }
+  } catch(e){ console.error('No se pudo cargar:', e); }
+}
+
+// ============ ELEMENTOS DOM ============
+const tbody = document.getElementById('tbody');
+const logEl = document.getElementById('log');
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const exportBtn = document.getElementById('exportBtn');
+const exportPdfBtn = document.getElementById('exportPdfBtn');
+const countPill = document.getElementById('countPill');
+const searchInput = document.getElementById('searchInput');
+const spinnerOverlay = document.getElementById('spinnerOverlay');
+const spinnerStatus = document.getElementById('spinnerStatus');
+
+function logMsg(msg, cls){
+  const line = document.createElement('div');
+  if(cls) line.className = cls;
+  line.textContent = msg;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// ============ INDEXED DB ============
+const DB_NAME = 'manifiestoVehiculosDB';
+const DB_VERSION = 2;
+const PDF_STORE = 'pdfs';
+
+function openPdfDB(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains(PDF_STORE)){
+        db.createObjectStore(PDF_STORE, { keyPath: 'id', autoIncrement: true });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function savePdfToDB(file, bl){
+  try{
+    // Verificar si ya existe un PDF con el mismo nombre y BL
+    const existing = await listPdfsFromDB();
+    const duplicate = existing.find(r => r.name === file.name && r.bl === bl);
+    if(duplicate){
+      logMsg(`ℹ️ El PDF "${file.name}" ya está guardado.`, 'info');
+      return duplicate.id;
+    }
+    
+    const db = await openPdfDB();
+    const arrayBuffer = await file.arrayBuffer();
+    const record = { 
+      name: file.name, 
+      bl: bl || 'Sin B/L', 
+      date: new Date().toISOString(), 
+      size: file.size, 
+      data: arrayBuffer 
+    };
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(PDF_STORE, 'readwrite');
+      const req = tx.objectStore(PDF_STORE).add(record);
+      req.onsuccess = () => { logMsg(`📎 PDF guardado: ${file.name}`, 'ok'); resolve(req.result); };
+      req.onerror = () => reject(tx.error);
+    });
+  } catch(e){ console.error('No se pudo guardar el PDF:', e); return null; }
+}
+
+async function listPdfsFromDB(){
+  const db = await openPdfDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PDF_STORE, 'readonly');
+    const req = tx.objectStore(PDF_STORE).getAll();
+    req.onsuccess = () => { pdfRecords = req.result; resolve(req.result); };
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function deletePdfFromDB(id){
+  const db = await openPdfDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PDF_STORE, 'readwrite');
+    tx.objectStore(PDF_STORE).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+function getPdfByFileName(filename){
+  return pdfRecords.find(r => r.name === filename);
+}
+
+function openStoredPdf(record){
+  const blob = new Blob([record.data], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+// ============ MANEJO DE ARCHIVOS ============
 async function handleFiles(fileList){
   const files = Array.from(fileList).filter(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
   if(files.length === 0){
@@ -523,24 +783,35 @@ async function handleFiles(fileList){
   }
 
   spinnerOverlay.classList.add('active');
-  spinnerStatus.textContent = 'Procesando 0/' + files.length;
+  
+  // Cargar PDFs existentes para verificar duplicados
+  await listPdfsFromDB();
 
-  const results = [];
   for(let i = 0; i < files.length; i++){
     const file = files[i];
     spinnerStatus.textContent = `Procesando ${i+1}/${files.length}: ${file.name}`;
     try{
       logMsg(`📄 Procesando: ${file.name} ...`);
       const text = await extractPdfText(file);
-      const extracted = extractFields(text);
-      const blForFile = extracted.length > 0 ? extracted[0].bl : extractBL(text);
+      const extracted = extractFields(text, file.name);
+      
+      let blForFile = extracted.length > 0 ? extracted[0].bl : '';
+      if(!blForFile) blForFile = extractBLFromFilename(file.name);
+      
+      // Guardar PDF en IndexedDB (evita duplicados)
       await savePdfToDB(file, blForFile);
       
       if(extracted.length === 0){
-        rows.push(newRow(file.name, {}));
+        const newRowData = newRow(file.name, {});
+        if(blForFile) newRowData.bl = blForFile;
+        rows.push(newRowData);
         logMsg(`⚠ ${file.name}: no se detectó VIN, se agregó fila vacía.`, 'err');
       } else {
-        extracted.forEach(fields => rows.push(newRow(file.name, fields)));
+        extracted.forEach(fields => {
+          const newRowData = newRow(file.name, fields);
+          if(!newRowData.bl && blForFile) newRowData.bl = blForFile;
+          rows.push(newRowData);
+        });
         logMsg(`✓ ${file.name}: ${extracted.length} vehículo(s) detectado(s).`, 'ok');
       }
     } catch(err){
@@ -556,6 +827,7 @@ async function handleFiles(fileList){
   fileInput.value = '';
 }
 
+// ============ ROW FACTORY ============
 function newRow(fileName, fields){
   rowIdCounter++;
   return {
@@ -574,7 +846,7 @@ function newRow(fileName, fields){
   };
 }
 
-// --- RENDERIZADO DE TABLA CON FILTRO Y DUPLICADOS ---
+// ============ RENDER TABLA ============
 function getFilteredRows(){
   if(!filterText.trim()) return rows;
   const lower = filterText.toLowerCase();
@@ -584,6 +856,9 @@ function getFilteredRows(){
     String(r.vin).toLowerCase().includes(lower) ||
     String(r.anio).toLowerCase().includes(lower) ||
     String(r.color).toLowerCase().includes(lower) ||
+    String(r.bl).toLowerCase().includes(lower) ||
+    String(r.vessel).toLowerCase().includes(lower) ||
+    String(r.fecha).toLowerCase().includes(lower) ||
     String(r.file).toLowerCase().includes(lower)
   );
 }
@@ -593,28 +868,34 @@ function renderTable(){
   tbody.innerHTML = '';
   
   if(filtered.length === 0){
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="8">${rows.length === 0 ? 'Aún no hay vehículos registrados. Sube un PDF para comenzar.' : 'No hay coincidencias con tu búsqueda.'}</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="11">${rows.length === 0 ? 'Aún no hay vehículos registrados. Sube un PDF para comenzar.' : 'No hay coincidencias con tu búsqueda.'}</td></tr>`;
   } else {
-    // Detectar VINs duplicados
     const vinCounts = {};
     filtered.forEach(r => { if(r.vin) vinCounts[r.vin] = (vinCounts[r.vin] || 0) + 1; });
     
     filtered.forEach((row, idx) => {
       const tr = document.createElement('tr');
       const isValid = validateVin(row.vin);
-      const vinWarn = !isValid ? '<span class="warn-badge">⚠ revisar</span>' : '';
+      const vinWarn = !isValid && row.vin ? '<span class="warn-badge">⚠ revisar</span>' : '';
       const isDuplicate = row.vin && vinCounts[row.vin] > 1;
       const dupBadge = isDuplicate ? '<span class="duplicate-badge">duplicado</span>' : '';
       const highlightClass = isDuplicate ? 'highlight-duplicate' : '';
       
+      // Verificar si el PDF está guardado
+      const pdfRecord = getPdfByFileName(row.file);
+      const pdfLink = pdfRecord ? `<button class="btn-pdf-link" data-pdf-id="${pdfRecord.id}" title="Ver PDF original">📎</button>` : '';
+      
       tr.innerHTML = `
-        <td style="padding:10px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;font-size:12px;">${idx + 1}</td>
+        <td style="padding:8px 4px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;font-size:11px;text-align:center;">${idx + 1}</td>
         <td><input class="cell-input" data-field="consignatario" data-id="${row.id}" value="${escapeAttr(row.consignatario)}" placeholder="—"></td>
         <td><input class="cell-input" data-field="marcaModelo" data-id="${row.id}" value="${escapeAttr(row.marcaModelo)}" placeholder="—"></td>
         <td class="vin-cell"><input class="cell-input ${highlightClass}" data-field="vin" data-id="${row.id}" value="${escapeAttr(row.vin)}" placeholder="17 caracteres">${vinWarn}${dupBadge}</td>
         <td><input class="cell-input" data-field="anio" data-id="${row.id}" value="${escapeAttr(row.anio)}" placeholder="—">${row.anioFromVin ? '<span class="warn-badge" style="background:var(--brass-dark);" title="Estimado a partir del VIN">VIN</span>' : ''}</td>
         <td><input class="cell-input" data-field="color" data-id="${row.id}" value="${escapeAttr(row.color)}" placeholder="—"></td>
-        <td class="file-cell" title="${escapeAttr(row.file)}">${escapeHtml(row.file)}</td>
+        <td><input class="cell-input" data-field="bl" data-id="${row.id}" value="${escapeAttr(row.bl)}" placeholder="—" style="font-family:'JetBrains Mono',monospace;font-size:11px;"></td>
+        <td><input class="cell-input" data-field="vessel" data-id="${row.id}" value="${escapeAttr(row.vessel)}" placeholder="—"></td>
+        <td><input class="cell-input" data-field="fecha" data-id="${row.id}" value="${escapeAttr(row.fecha)}" placeholder="—" style="font-size:11px;"></td>
+        <td class="file-cell" title="${escapeAttr(row.file)}">${escapeHtml(row.file)} ${pdfLink}</td>
         <td class="del-cell"><button data-id="${row.id}" title="Eliminar fila">✕</button></td>
       `;
       tbody.appendChild(tr);
@@ -622,9 +903,10 @@ function renderTable(){
   }
   countPill.textContent = rows.length > 0 ? `${rows.length} vehículo${rows.length === 1 ? '' : 's'} registrado${rows.length === 1 ? '' : 's'}${filterText ? ` (${filtered.length} filtrados)` : ''}` : '';
   exportBtn.disabled = rows.length === 0;
+  exportPdfBtn.disabled = rows.length === 0;
 }
 
-// --- EVENTOS DE LA TABLA ---
+// ============ EVENTOS DE TABLA ============
 tbody.addEventListener('input', e => {
   if(!e.target.matches('.cell-input')) return;
   const id = Number(e.target.dataset.id);
@@ -635,29 +917,44 @@ tbody.addEventListener('input', e => {
     else row[field] = e.target.value;
     if(field === 'anio') row.anioFromVin = false;
     saveRows();
-    renderTable(); // Refrescar para actualizar duplicados
+    renderTable();
   }
 });
 
 tbody.addEventListener('click', e => {
-  const btn = e.target.closest('td.del-cell button');
-  if(!btn) return;
-  const id = Number(btn.dataset.id);
-  if(confirm('¿Eliminar este vehículo?')){
-    rows = rows.filter(r => r.id !== id);
-    saveRows();
-    renderTable();
-    renderShipmentsSummary();
+  // Eliminar fila
+  const delBtn = e.target.closest('td.del-cell button');
+  if(delBtn){
+    const id = Number(delBtn.dataset.id);
+    if(confirm('¿Eliminar este vehículo?')){
+      rows = rows.filter(r => r.id !== id);
+      saveRows();
+      renderTable();
+      renderShipmentsSummary();
+    }
+    return;
+  }
+  
+  // Abrir PDF vinculado
+  const pdfBtn = e.target.closest('.btn-pdf-link');
+  if(pdfBtn){
+    const pdfId = Number(pdfBtn.dataset.pdfId);
+    const record = pdfRecords.find(r => r.id === pdfId);
+    if(record){
+      openStoredPdf(record);
+    } else {
+      logMsg('⚠️ El PDF ya no está disponible en el almacenamiento local.', 'err');
+    }
   }
 });
 
-// --- BUSCADOR EN TIEMPO REAL ---
+// ============ BUSCADOR ============
 searchInput.addEventListener('input', e => {
   filterText = e.target.value;
   renderTable();
 });
 
-// --- ACCIONES DE BOTONES ---
+// ============ ACCIONES DE BOTONES ============
 document.getElementById('addRowBtn').addEventListener('click', () => {
   rows.push(newRow('(manual)', {}));
   saveRows();
@@ -676,7 +973,6 @@ document.getElementById('clearBtn').addEventListener('click', () => {
   }
 });
 
-// Atajo de teclado: Ctrl+Shift+A
 document.addEventListener('keydown', e => {
   if(e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')){
     e.preventDefault();
@@ -684,51 +980,93 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// --- EXPORTACIONES ---
+// ============ EXPORTAR A EXCEL ============
 exportBtn.addEventListener('click', () => {
-  const firstWithBl = rows.find(r => r.bl) || {};
-  const firstWithVessel = rows.find(r => r.vessel) || {};
-  
   const aoa = [
-    [`Conocimiento de Embarque (B/L): ${firstWithBl.bl || '—'}`],
-    [`Buque / Vessel: ${firstWithVessel.vessel || '—'}`],
-    [],
-    ['#', 'Consignatario', 'Marca y Modelo', 'VIN / Chasis', 'Año', 'Color', 'Archivo']
+    ['#', 'Consignatario', 'Marca y Modelo', 'VIN / Chasis', 'Año', 'Color', 'B/L', 'Buque', 'Fecha', 'Archivo']
   ];
   rows.forEach((r, idx) => {
-    aoa.push([idx + 1, r.consignatario, r.marcaModelo, r.vin, r.anio, r.color, r.file]);
+    aoa.push([
+      idx + 1,
+      r.consignatario,
+      r.marcaModelo,
+      r.vin,
+      r.anio,
+      r.color,
+      r.bl || '—',
+      r.vessel || '—',
+      r.fecha || '—',
+      r.file
+    ]);
   });
 
   const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols'] = [{wch:5},{wch:26},{wch:22},{wch:19},{wch:8},{wch:14},{wch:24}];
-  ws['!merges'] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }
+  ws['!cols'] = [
+    {wch:5},{wch:26},{wch:22},{wch:19},{wch:8},
+    {wch:14},{wch:18},{wch:20},{wch:14},{wch:24}
   ];
-  ws['!rows'] = [{ hpt: 20 }, { hpt: 20 }, { hpt: 6 }, { hpt: 20 }];
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Vehículos');
   const today = new Date().toISOString().slice(0,10);
   XLSX.writeFile(wb, `control-importacion-vehiculos-${today}.xlsx`);
+  logMsg(`📊 Excel exportado: control-importacion-vehiculos-${today}.xlsx`, 'ok');
 });
 
-document.getElementById('exportCsvBtn').addEventListener('click', () => {
+// ============ EXPORTAR A PDF (TABLA) ============
+exportPdfBtn.addEventListener('click', () => {
   if(rows.length === 0) return;
-  const headers = ['Consignatario','MarcaModelo','VIN','Año','Color','Archivo'];
-  const csvRows = [headers.join(',')];
-  rows.forEach(r => {
-    const row = [r.consignatario, r.marcaModelo, r.vin, r.anio, r.color, r.file].map(v => `"${String(v).replace(/"/g,'""')}"`);
-    csvRows.push(row.join(','));
+  
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('landscape', 'mm', 'a4');
+  
+  // Título
+  doc.setFontSize(16);
+  doc.text('Manifiesto de Importación - Control de Vehículos', 14, 20);
+  doc.setFontSize(10);
+  doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 28);
+  doc.text(`Total de vehículos: ${rows.length}`, 14, 34);
+  
+  // Datos para la tabla
+  const tableData = rows.map((r, idx) => [
+    String(idx + 1),
+    r.consignatario || '—',
+    r.marcaModelo || '—',
+    r.vin || '—',
+    r.anio || '—',
+    r.color || '—',
+    r.bl || '—',
+    r.vessel || '—',
+    r.fecha || '—'
+  ]);
+  
+  doc.autoTable({
+    startY: 40,
+    head: [['#', 'Consignatario', 'Marca/Modelo', 'VIN', 'Año', 'Color', 'B/L', 'Buque', 'Fecha']],
+    body: tableData,
+    theme: 'grid',
+    styles: { fontSize: 7, cellPadding: 2 },
+    headStyles: { fillColor: [15, 59, 60], textColor: [255, 255, 255], fontSize: 7, fontStyle: 'bold' },
+    columnStyles: {
+      0: { cellWidth: 8 },
+      1: { cellWidth: 28 },
+      2: { cellWidth: 30 },
+      3: { cellWidth: 32 },
+      4: { cellWidth: 12 },
+      5: { cellWidth: 16 },
+      6: { cellWidth: 22 },
+      7: { cellWidth: 22 },
+      8: { cellWidth: 18 }
+    },
+    margin: { top: 38, left: 10, right: 10 }
   });
-  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = `vehiculos-${new Date().toISOString().slice(0,10)}.csv`;
-  link.click();
-  URL.revokeObjectURL(link.href);
+  
+  const today = new Date().toISOString().slice(0,10);
+  doc.save(`manifiesto-vehiculos-${today}.pdf`);
+  logMsg(`📄 PDF exportado: manifiesto-vehiculos-${today}.pdf`, 'ok');
 });
 
+// ============ REPORTE MENSUAL ============
 document.getElementById('monthlyReportBtn').addEventListener('click', () => {
   if(rows.length === 0){
     logMsg('No hay vehículos para generar el reporte.', 'err');
@@ -756,73 +1094,44 @@ document.getElementById('monthlyReportBtn').addEventListener('click', () => {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Reporte Mensual');
   XLSX.writeFile(wb, `reporte-mensual-vehiculos-${new Date().toISOString().slice(0,7)}.xlsx`);
+  logMsg(`📈 Reporte mensual exportado.`, 'ok');
 });
 
-// --- RESTO DE FUNCIONES (MANTENIDAS) ---
-function escapeHtml(str){
-  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
-}
-function escapeAttr(str){ return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
-
-// --- PDF PANEL (MANTENIDO) ---
-async function listPdfsFromDB(){
-  const db = await openPdfDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(PDF_STORE, 'readonly');
-    const req = tx.objectStore(PDF_STORE).getAll();
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function deletePdfFromDB(id){
-  const db = await openPdfDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(PDF_STORE, 'readwrite');
-    tx.objectStore(PDF_STORE).delete(id);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-function openStoredPdf(record){
-  const blob = new Blob([record.data], { type: 'application/pdf' });
-  const url = URL.createObjectURL(blob);
-  window.open(url, '_blank');
-}
-
+// ============ PANEL DE PDFs ============
 async function renderPdfList(){
   const listEl = document.getElementById('pdfList');
   if(!listEl) return;
-  let records;
   try{
-    records = await listPdfsFromDB();
+    await listPdfsFromDB();
   } catch(e){
     listEl.innerHTML = '<p style="color:var(--text-dim);">No se pudo cargar la lista de PDFs.</p>';
     return;
   }
-  if(records.length === 0){
+  if(pdfRecords.length === 0){
     listEl.innerHTML = '<p style="color:var(--text-dim);font-style:italic;">Aún no hay PDFs guardados en este dispositivo.</p>';
     return;
   }
-  records.sort((a, b) => new Date(b.date) - new Date(a.date));
+  pdfRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
   const groups = {};
-  records.forEach(r => {
+  pdfRecords.forEach(r => {
     const key = r.bl || 'Sin B/L';
     groups[key] = groups[key] || [];
     groups[key].push(r);
   });
+  
   listEl.innerHTML = Object.keys(groups).map(bl => `
     <div style="margin-bottom:14px;">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700;color:var(--ink);margin-bottom:6px;">B/L: ${escapeHtml(bl)}</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700;color:var(--ink);margin-bottom:6px;">📄 B/L: ${escapeHtml(bl)}</div>
       ${groups[bl].map(r => `
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;background:#fff;border-radius:6px;margin-bottom:6px;">
-          <div style="font-size:12.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">
-            ${escapeHtml(r.name)}<br>
-            <span style="color:var(--text-dim);font-size:11px;">${new Date(r.date).toLocaleDateString()} · ${(r.size/1024).toFixed(0)} KB</span>
+        <div class="pdf-list-item">
+          <div class="info">
+            ${escapeHtml(r.name)}
+            <div class="meta">${new Date(r.date).toLocaleDateString()} · ${(r.size/1024).toFixed(0)} KB</div>
           </div>
-          <button class="btn-track-summary" data-open-id="${r.id}">Abrir</button>
-          <button class="btn-track-summary" style="background:var(--rust);color:#fff;" data-del-id="${r.id}">✕</button>
+          <div style="display:flex;gap:4px;">
+            <button class="btn-track-summary" data-open-id="${r.id}">Abrir</button>
+            <button class="btn-track-summary" style="background:var(--rust);color:#fff;" data-del-id="${r.id}">✕</button>
+          </div>
         </div>
       `).join('')}
     </div>
@@ -830,7 +1139,7 @@ async function renderPdfList(){
 
   listEl.querySelectorAll('[data-open-id]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const rec = records.find(r => r.id === Number(btn.dataset.openId));
+      const rec = pdfRecords.find(r => r.id === Number(btn.dataset.openId));
       if(rec) openStoredPdf(rec);
     });
   });
@@ -838,7 +1147,9 @@ async function renderPdfList(){
     btn.addEventListener('click', async () => {
       if(confirm('¿Eliminar este PDF guardado? Esto no se puede deshacer.')){
         await deletePdfFromDB(Number(btn.dataset.delId));
+        await listPdfsFromDB();
         renderPdfList();
+        renderTable(); // Actualizar enlaces en la tabla
       }
     });
   });
@@ -851,6 +1162,7 @@ document.getElementById('pdfPanelBtn').addEventListener('click', () => {
   if(isHidden) renderPdfList();
 });
 
+// ============ SHIPMENTS SUMMARY ============
 function renderShipmentsSummary(){
   const container = document.getElementById('shipmentsSummary');
   if(!container) return;
@@ -859,7 +1171,7 @@ function renderShipmentsSummary(){
     const key = r.bl || 'Sin B/L';
     if(!groups[key]) groups[key] = { bl: r.bl, vessel: r.vessel, fecha: r.fecha };
   });
-  const keys = Object.keys(groups).filter(k => groups[k].bl);
+  const keys = Object.keys(groups).filter(k => groups[k].bl && groups[k].bl !== 'Sin B/L');
   if(keys.length === 0){
     container.innerHTML = '';
     return;
@@ -868,11 +1180,12 @@ function renderShipmentsSummary(){
     const g = groups[k];
     return `
       <div class="shipment-card">
-        <div class="line1">Conocimiento de Embarque (B/L): ${escapeHtml(g.bl)}</div>
+        <div class="line1">🚢 Conocimiento de Embarque (B/L): ${escapeHtml(g.bl)}</div>
         <div class="line2">
           <span>Buque: ${escapeHtml(g.vessel || '—')}</span>
           <span>Fecha: ${escapeHtml(g.fecha || '—')}</span>
-          <button class="btn-track-summary" data-bl="${escapeAttr(g.bl)}">🚢 Rastrear</button>
+          <button class="btn-track-summary" data-bl="${escapeAttr(g.bl)}">🌐 Rastrear</button>
+          <button class="btn-track-summary" style="background:var(--brass-dark);" data-view-pdf="${escapeAttr(g.bl)}">📎 Ver PDF</button>
         </div>
       </div>
     `;
@@ -880,15 +1193,54 @@ function renderShipmentsSummary(){
 }
 
 document.getElementById('shipmentsSummary').addEventListener('click', e => {
-  const btn = e.target.closest('.btn-track-summary');
-  if(!btn) return;
-  trackBL(btn.dataset.bl);
+  const trackBtn = e.target.closest('[data-bl]');
+  if(trackBtn){
+    trackBL(trackBtn.dataset.bl);
+    return;
+  }
+  const pdfBtn = e.target.closest('[data-view-pdf]');
+  if(pdfBtn){
+    const bl = pdfBtn.dataset.viewPdf;
+    const record = pdfRecords.find(r => r.bl === bl);
+    if(record){
+      openStoredPdf(record);
+    } else {
+      logMsg('⚠️ No se encontró el PDF para este B/L.', 'err');
+    }
+  }
 });
 
-// --- INICIALIZACIÓN ---
-loadRows();
-renderTable();
-renderShipmentsSummary();
+function trackBL(bl){
+  if(!bl){ logMsg('No hay número de B/L para rastrear.', 'err'); return; }
+  const prefix = bl.slice(0, 4).toUpperCase();
+  const carrier = CARRIERS[prefix];
+  if(carrier){
+    logMsg(`🚢 Abriendo rastreo de ${carrier.name} para ${bl} ...`);
+    window.open(carrier.url(bl), '_blank');
+  } else {
+    logMsg(`🌐 Naviera no reconocida. Abriendo búsqueda general para ${bl}`, 'info');
+    window.open(`https://www.google.com/search?q=tracking+bill+of+lading+${encodeURIComponent(bl)}`, '_blank');
+  }
+}
+
+// ============ UTILIDADES ============
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+}
+function escapeAttr(str){ return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+
+// ============ INICIALIZACIÓN ============
+async function init(){
+  loadRows();
+  await listPdfsFromDB();
+  renderTable();
+  renderShipmentsSummary();
+  
+  // Actualizar enlaces de PDF en la tabla después de cargar PDFs
+  // Los enlaces se generan en renderTable() usando pdfRecords
+}
+
+init();
 
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
