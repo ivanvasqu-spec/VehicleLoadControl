@@ -26,7 +26,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
-  /* ============ ESTILOS ============ */
   :root{
     --ink:#0F3B3C;
     --ink-deep:#0A2829;
@@ -491,7 +490,6 @@
 // ============ CONFIGURACIÓN ============
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-// Configurar Tesseract para español - MEJORADO
 const TESSERACT_LANG = 'spa+eng';
 
 const BRANDS = ["Toyota","Honda","Nissan","Ford","Chevrolet","Hyundai","Kia","Mazda","BMW","Mercedes-Benz","Mercedes","Audi","Volkswagen","VW","Subaru","Mitsubishi","Suzuki","Lexus","Jeep","Dodge","Chrysler","RAM","GMC","Buick","Cadillac","Volvo","Land Rover","Porsche","Ferrari","Lamborghini","Maserati","Peugeot","Renault","Fiat","Isuzu","Great Wall","GWM","MG","Chery","Geely","BYD","JAC","Acura","Infiniti","Mini","Jaguar","Alfa Romeo","SEAT","Skoda","Tesla"];
@@ -609,7 +607,69 @@ function validateVin(vin){
   return vinUpper[8] === expectedCheck;
 }
 
-// ============ EXTRACCIÓN MEJORADA ============
+// ============ EXTRACCIÓN DE TEXTO CON OCR EN IMÁGENES ============
+async function extractPdfTextWithOCR(file){
+  console.log('📄 === EXTRACT PDF TEXT ===');
+  console.log('📄 Archivo:', file.name);
+  
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  console.log(`📄 PDF cargado: ${pdf.numPages} páginas`);
+  
+  let fullText = '';
+  
+  for(let i = 1; i <= pdf.numPages; i++){
+    console.log(`📄 Procesando página ${i}/${pdf.numPages}...`);
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({ scale: 2.5 });
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    
+    await page.render({ canvasContext: context, viewport: viewport }).promise;
+    
+    const content = await page.getTextContent();
+    const nativeText = content.items.map(it => it.str).join(' ');
+    console.log(`📄 Página ${i} - Texto nativo (${nativeText.length} chars)`);
+    
+    const imageData = canvas.toDataURL('image/png');
+    
+    console.log(`📄 Página ${i} - Aplicando OCR...`);
+    const result = await Tesseract.recognize(imageData, TESSERACT_LANG, {
+      logger: m => {
+        if(m.status === 'recognizing text'){
+          const progress = Math.round((m.progress || 0) * 100);
+          const pageProgress = ((i-1) + (m.progress || 0)) / pdf.numPages;
+          document.getElementById('spinnerStatus').textContent = `OCR página ${i}/${pdf.numPages}: ${progress}%`;
+          document.getElementById('progressFill').style.width = `${pageProgress * 100}%`;
+        }
+      }
+    });
+    
+    const ocrText = result.data.text;
+    console.log(`📄 Página ${i} - OCR texto (${ocrText.length} chars)`);
+    console.log(`📄 OCR vista previa: ${ocrText.substring(0, 300)}`);
+    
+    fullText += nativeText + '\n' + ocrText + '\n';
+  }
+  
+  console.log('📄 === TEXTO FINAL ===');
+  console.log(`📄 Total: ${fullText.length} caracteres`);
+  console.log('📄 Buscando patrones de vehículos...');
+  
+  const vehiclePatterns = fullText.match(/\d{4}YM\s+[A-Za-z]+\s+[A-Za-z0-9\s\.]+CHASSIS\s*NO\.?:?\s*[A-HJ-NPR-Z0-9]{17}/gi);
+  if(vehiclePatterns) {
+    console.log('🚗 Patrones de vehículos encontrados:', vehiclePatterns.length);
+    vehiclePatterns.forEach((p, idx) => console.log(`   ${idx+1}: ${p}`));
+  } else {
+    console.log('⚠️ No se encontraron patrones de vehículos');
+  }
+  
+  return fullText;
+}
+
+// ============ EXTRACCIÓN DE CAMPOS MEJORADA ============
 function extractFields(text, filename){
   console.log('🔍 === EXTRACT FIELDS ===');
   console.log('📄 Texto recibido (primeros 500 chars):', text.substring(0, 500));
@@ -621,7 +681,6 @@ function extractFields(text, filename){
   
   console.log('📌 Datos básicos:', { consignatario, bl, vessel, fecha });
 
-  // ===== ESTRATEGIA 1: Patrón "2026YM TOYOTA FORTUNER 2.7 WHITE CHASSIS NO: XXX" =====
   const vehicleLineRegex = /(\d{4})\s*YM\s+([A-Za-z][A-Za-z\-]*)\s+([\s\S]*?)\s*CHASSIS\s*NO\.?:?\s*([A-HJ-NPR-Z0-9]{17})/gi;
   const vehicleMatches = [...text.matchAll(vehicleLineRegex)];
   console.log('🔎 Estrategia 1 - Matches:', vehicleMatches.length);
@@ -645,7 +704,6 @@ function extractFields(text, filename){
     });
   }
 
-  // ===== ESTRATEGIA 2: Buscar VINs sueltos =====
   const vinRegex = /\b[A-HJ-NPR-Z0-9]{17}\b/gi;
   const vins = [...new Set((text.match(vinRegex) || []).map(v => v.toUpperCase()))];
   console.log('🔎 Estrategia 2 - VINs encontrados:', vins.length, vins);
@@ -658,14 +716,12 @@ function extractFields(text, filename){
       const vinYear = decodeVinYear(vin);
       if(vinYear){ finalAnio = vinYear; anioFromVin = true; }
       
-      // Intentar encontrar marca/modelo cerca del VIN
       let marcaModelo = '';
       let color = '';
       const contextRegex = new RegExp(`[\\s\\S]{0,150}${vin}[\\s\\S]{0,150}`, 'i');
       const contextMatch = text.match(contextRegex);
       if(contextMatch){
         const ctx = contextMatch[0];
-        console.log(`   📍 Contexto para ${vin}:`, ctx);
         const brandFound = BRANDS.find(b => new RegExp(`\\b${b.replace('.', '\\.')}\\b`, 'i').test(ctx));
         if(brandFound) marcaModelo = brandFound;
         const colorFound = COLORS.find(c => new RegExp(`\\b${c}\\b`, 'i').test(ctx));
@@ -676,7 +732,6 @@ function extractFields(text, filename){
     });
   }
 
-  // ===== ESTRATEGIA 3: Buscar texto con "CHASSIS" aunque no tenga YM =====
   const chassisRegex = /CHASSIS\s*NO\.?:?\s*([A-HJ-NPR-Z0-9]{17})/gi;
   const chassisMatches = [...text.matchAll(chassisRegex)];
   console.log('🔎 Estrategia 3 - Chassis matches:', chassisMatches.length);
@@ -693,73 +748,31 @@ function extractFields(text, filename){
     });
   }
 
+  const ymRegex = /\b(\d{4})\s*YM\s*([A-Za-z\s]+?)(?=\s*\d{4}YM|\s*CHASSIS|$)/gi;
+  const ymMatches = [...text.matchAll(ymRegex)];
+  console.log('🔎 Estrategia 4 - YM matches:', ymMatches.length);
+  
+  if(ymMatches.length > 0){
+    console.log('✅ Estrategia 4 - YM detectados:', ymMatches.length);
+    const results = [];
+    ymMatches.forEach(m => {
+      const anio = m[1];
+      const marcaModelo = m[2].trim();
+      const vinContext = text.substring(Math.max(0, m.index - 100), Math.min(text.length, m.index + 200));
+      const vinFound = vinContext.match(/\b[A-HJ-NPR-Z0-9]{17}\b/);
+      if(vinFound) {
+        const vin = vinFound[0].toUpperCase();
+        let color = '';
+        const colorFound = COLORS.find(c => new RegExp(`\\b${c}\\b`, 'i').test(vinContext));
+        if(colorFound) color = colorFound.charAt(0) + colorFound.slice(1).toLowerCase();
+        results.push({ vin, marcaModelo, anio, anioFromVin: false, color, consignatario, bl, vessel, fecha });
+      }
+    });
+    if(results.length > 0) return results;
+  }
+
   console.log('❌ Ninguna estrategia encontró vehículos.');
   return [];
-}
-
-// ============ EXTRACCIÓN DE TEXTO CON OCR ============
-async function extractPdfTextWithOCR(file){
-  console.log('📄 === EXTRACT PDF TEXT ===');
-  console.log('📄 Archivo:', file.name);
-  
-  const buf = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
-  console.log(`📄 PDF cargado: ${pdf.numPages} páginas`);
-  
-  let fullText = '';
-  
-  for(let i = 1; i <= pdf.numPages; i++){
-    console.log(`📄 Procesando página ${i}/${pdf.numPages}...`);
-    const page = await pdf.getPage(i);
-    const viewport = page.getViewport({ scale: 2.0 }); // Escala más alta para mejor OCR
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    
-    await page.render({ canvasContext: context, viewport: viewport }).promise;
-    
-    // Intentar extraer texto nativo primero
-    const content = await page.getTextContent();
-    const nativeText = content.items.map(it => it.str).join(' ');
-    console.log(`📄 Página ${i} - Texto nativo (${nativeText.length} chars):`, nativeText.substring(0, 200));
-    
-    if(nativeText.trim().length > 50){
-      fullText += nativeText + '\n';
-    } else {
-      // Usar OCR si no hay texto nativo
-      console.log(`📄 Página ${i} - Usando OCR...`);
-      
-      // Mejorar la imagen para OCR (contraste + escala)
-      const imageData = canvas.toDataURL('image/png');
-      
-      const result = await Tesseract.recognize(imageData, TESSERACT_LANG, {
-        logger: m => {
-          if(m.status === 'recognizing text'){
-            const progress = Math.round((m.progress || 0) * 100);
-            const pageProgress = ((i-1) + (m.progress || 0)) / pdf.numPages;
-            document.getElementById('spinnerStatus').textContent = `OCR página ${i}/${pdf.numPages}: ${progress}%`;
-            document.getElementById('progressFill').style.width = `${pageProgress * 100}%`;
-          }
-        }
-      });
-      
-      const ocrText = result.data.text;
-      console.log(`📄 Página ${i} - OCR texto (${ocrText.length} chars):`, ocrText.substring(0, 200));
-      fullText += ocrText + '\n';
-    }
-  }
-  
-  console.log('📄 === TEXTO FINAL ===');
-  console.log(`📄 Total: ${fullText.length} caracteres`);
-  console.log('📄 Primeros 500 chars:', fullText.substring(0, 500));
-  console.log('📄 Últimos 500 chars:', fullText.substring(Math.max(0, fullText.length - 500)));
-  
-  // Mostrar en el log visual también
-  logMsg(`📝 Texto extraído (${fullText.length} caracteres)`, 'debug');
-  logMsg(`📝 Vista previa: ${fullText.substring(0, 200)}...`, 'debug');
-  
-  return fullText;
 }
 
 // ============ ESTADO GLOBAL ============
