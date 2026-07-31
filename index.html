@@ -530,7 +530,6 @@
     <div class="btn-group" style="display:flex;gap:6px;flex-wrap:wrap;">
       <button class="btn-primary" id="exportBtn" disabled>📊 Excel</button>
       <button class="btn-primary" id="exportPdfBtn" disabled style="background:#8B3A2B;">📄 PDF</button>
-      <button class="btn-primary" id="exportCompletoBtn" disabled style="background:var(--ok);">📋 Reporte Completo</button>
       <button class="btn-ghost btn-small" id="monthlyReportBtn">📈 Mensual</button>
       <button class="btn-ghost btn-small" id="pdfPanelBtn">📁 PDFs</button>
       <button class="btn-ghost btn-small" id="addRowBtn">➕ Agregar</button>
@@ -597,7 +596,6 @@ const CARRIERS = {
 
 // ============ DECODIFICACIÓN DE VIN ============
 const VIN_DECODER = {
-  // Mapa de WMI (World Manufacturer Identifier) - primeros 3 caracteres
   wmi: {
     'JHM': { brand: 'Honda', country: 'Japón' },
     'JHL': { brand: 'Honda', country: 'Japón' },
@@ -884,8 +882,6 @@ const VIN_DECODER = {
     'MDY': { brand: 'Suzuki', country: 'India' },
     'MDZ': { brand: 'Suzuki', country: 'India' }
   },
-
-  // Mapa de años (posición 10 del VIN)
   years: {
     'A': 1980, 'B': 1981, 'C': 1982, 'D': 1983, 'E': 1984,
     'F': 1985, 'G': 1986, 'H': 1987, 'J': 1988, 'K': 1989,
@@ -899,8 +895,6 @@ const VIN_DECODER = {
     'S': 2025, 'T': 2026, 'V': 2027, 'W': 2028, 'X': 2029,
     'Y': 2030
   },
-
-  // Modelos comunes por marca (posición 4-8)
   models: {
     'Toyota': {
       '4RU': '4Runner',
@@ -1181,7 +1175,6 @@ function decodeVin(vin){
   const wmi = vinUpper.substring(0, 3);
   const yearCode = vinUpper.charAt(9);
   
-  // Decodificar fabricante
   let brand = '';
   let country = '';
   if(VIN_DECODER.wmi[wmi]){
@@ -1189,7 +1182,6 @@ function decodeVin(vin){
     country = VIN_DECODER.wmi[wmi].country;
   }
   
-  // Si no se encuentra en WMI, intentar por marca conocida en los primeros caracteres
   if(!brand){
     for(const [key, value] of Object.entries(VIN_DECODER.wmi)){
       if(vinUpper.startsWith(key)){
@@ -1200,22 +1192,18 @@ function decodeVin(vin){
     }
   }
   
-  // Decodificar año
   let year = '';
   if(VIN_DECODER.years[yearCode]){
     year = String(VIN_DECODER.years[yearCode]);
   }
   
-  // Intentar decodificar modelo (posición 4-8)
   let model = '';
   const modelCode = vinUpper.substring(3, 8);
   
   if(brand && VIN_DECODER.models[brand]){
-    // Buscar coincidencia exacta
     if(VIN_DECODER.models[brand][modelCode]){
       model = VIN_DECODER.models[brand][modelCode];
     } else {
-      // Buscar coincidencia parcial
       for(const [code, name] of Object.entries(VIN_DECODER.models[brand])){
         if(modelCode.includes(code) || code.includes(modelCode)){
           model = name;
@@ -1225,16 +1213,13 @@ function decodeVin(vin){
     }
   }
   
-  // Si no se encontró modelo, intentar con el código de modelo (posición 4-8)
   if(!model && modelCode){
-    // Intentar limpiar el código
     const cleanCode = modelCode.replace(/[^A-Z0-9]/g, '');
     if(cleanCode.length >= 2){
       model = cleanCode;
     }
   }
   
-  // Decodificar tipo de motor/combustible (posición 8)
   const engineType = vinUpper.charAt(7);
   let fuelType = '';
   switch(engineType){
@@ -1272,7 +1257,7 @@ function decodeVin(vin){
   };
 }
 
-// ============ FUNCIONES DE EXTRACCIÓN (MANTENIDAS) ============
+// ============ FUNCIONES DE EXTRACCIÓN ============
 function extractBLFromFilename(filename){
   if(!filename) return '';
   const match = filename.match(/^(\d{6,15})/);
@@ -1432,7 +1417,6 @@ function extractFields(text, filename){
   
   console.log('📌 Datos básicos:', { consignatario, bl, vessel, fecha });
 
-  // ===== ESTRATEGIA 1: Patrón "2026YM TOYOTA FORTUNER 2.7 WHITE CHASSIS NO: XXX" =====
   const vehicleLineRegex = /(\d{4})\s*YM\s+([A-Za-z][A-Za-z\-]*)\s+([\s\S]*?)\s*CHASSIS\s*NO\.?:?\s*([A-HJ-NPR-Z0-9]{17})/gi;
   const vehicleMatches = [...text.matchAll(vehicleLineRegex)];
   console.log('🔎 Estrategia 1 - Matches:', vehicleMatches.length);
@@ -1462,10 +1446,8 @@ function extractFields(text, filename){
       
       const vin = m[4].toUpperCase();
       
-      // Decodificar VIN para obtener información adicional
       const vinInfo = decodeVin(vin);
       if(vinInfo && vinInfo.brand && !marcaModelo.includes(vinInfo.brand)){
-        // Si la marca del VIN no está en el modelo, agregarla
         if(!marcaModelo) marcaModelo = vinInfo.fullInfo;
       }
       
@@ -1474,7 +1456,6 @@ function extractFields(text, filename){
     });
   }
 
-  // ===== ESTRATEGIA 2: Buscar VINs sueltos y decodificarlos =====
   const vinRegex = /\b[A-HJ-NPR-Z0-9]{17}\b/gi;
   const vins = [...new Set((text.match(vinRegex) || []).map(v => v.toUpperCase()))];
   console.log('🔎 Estrategia 2 - VINs encontrados:', vins.length);
@@ -1487,7 +1468,6 @@ function extractFields(text, filename){
       const vinYear = decodeVinYear(vin);
       if(vinYear){ finalAnio = vinYear; anioFromVin = true; }
       
-      // Decodificar VIN completo
       const vinInfo = decodeVin(vin);
       let marcaModelo = '';
       let color = '';
@@ -1508,7 +1488,6 @@ function extractFields(text, filename){
         if(colorFound) color = colorFound.charAt(0) + colorFound.slice(1).toLowerCase();
       }
       
-      // Si no hay marcaModelo aún, usar la información del VIN
       if(!marcaModelo && vinInfo) {
         marcaModelo = vinInfo.brand || '';
         if(vinInfo.model) marcaModelo += ' ' + vinInfo.model;
@@ -1521,7 +1500,6 @@ function extractFields(text, filename){
     });
   }
 
-  // ===== ESTRATEGIA 3: Buscar "CHASSIS" =====
   const chassisRegex = /CHASSIS\s*NO\.?:?\s*([A-HJ-NPR-Z0-9]{17})/gi;
   const chassisMatches = [...text.matchAll(chassisRegex)];
   console.log('🔎 Estrategia 3 - Chassis matches:', chassisMatches.length);
@@ -1573,7 +1551,6 @@ const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
 const exportBtn = document.getElementById('exportBtn');
 const exportPdfBtn = document.getElementById('exportPdfBtn');
-const exportCompletoBtn = document.getElementById('exportCompletoBtn');
 const countPill = document.getElementById('countPill');
 const searchInput = document.getElementById('searchInput');
 const spinnerOverlay = document.getElementById('spinnerOverlay');
@@ -1707,7 +1684,6 @@ async function handleFiles(fileList){
         extracted.forEach(fields => {
           const newRowData = newRow(file.name, fields);
           if(!newRowData.bl && blForFile) newRowData.bl = blForFile;
-          // Guardar información decodificada del VIN
           if(fields.vinInfo) {
             newRowData.vinDecoded = fields.vinInfo;
           }
@@ -1805,7 +1781,6 @@ function renderTable(){
     countPill.textContent = rows.length > 0 ? `${rows.length} vehículo${rows.length === 1 ? '' : 's'}` : '';
     exportBtn.disabled = rows.length === 0;
     exportPdfBtn.disabled = rows.length === 0;
-    exportCompletoBtn.disabled = rows.length === 0;
     return;
   }
 
@@ -1867,7 +1842,6 @@ function renderTable(){
       
       const displayMarca = (row.marcaModelo || '').substring(0, 50);
       
-      // Mostrar información decodificada del VIN
       let vinDecodedInfo = '';
       if(row.vinDecoded && row.vinDecoded.brand) {
         const parts = [];
@@ -1903,7 +1877,6 @@ function renderTable(){
   countPill.textContent = `${rows.length} vehículo${rows.length === 1 ? '' : 's'} registrado${rows.length === 1 ? '' : 's'}${filterText ? ` (${filtered.length} filtrados)` : ''}`;
   exportBtn.disabled = rows.length === 0;
   exportPdfBtn.disabled = rows.length === 0;
-  exportCompletoBtn.disabled = rows.length === 0;
 }
 
 // ============ EVENTOS DE TABLA ============
@@ -1937,11 +1910,9 @@ tbody.addEventListener('input', e => {
     if(field === 'vin') {
       const newVin = e.target.value.toUpperCase();
       row[field] = newVin;
-      // Re-decodificar VIN automáticamente
       const vinInfo = decodeVin(newVin);
       if(vinInfo && vinInfo.brand) {
         row.vinDecoded = vinInfo;
-        // Si no tiene marcaModelo, usar la decodificada
         if(!row.marcaModelo || row.marcaModelo === '') {
           row.marcaModelo = vinInfo.fullInfo || vinInfo.brand;
           if(row.marcaModelo.length > 50) row.marcaModelo = row.marcaModelo.substring(0, 50);
@@ -2037,17 +2008,24 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// ============ REPORTE EXCEL ============
+// ============ EXPORTAR EXCEL (MISMO FORMATO QUE PDF) ============
 exportBtn.addEventListener('click', () => {
   if(rows.length === 0) return;
   
-  const aoa = [
-    ['MANIFIESTO DE IMPORTACIÓN - CONTROL DE VEHÍCULOS'],
-    [`Fecha de exportación: ${new Date().toLocaleDateString()}`],
-    [`Total de vehículos: ${rows.length}`],
-    [],
-    ['B/L', 'Consignatario', 'Barco', 'Fecha', '#', 'Marca y Modelo', 'VIN / Chasis', 'Año', 'Color', 'Info VIN']
-  ];
+  const wb = XLSX.utils.book_new();
+  const today = new Date().toISOString().slice(0,10);
+  
+  // ===== HOJA PRINCIPAL: Mismo formato que el PDF =====
+  const data = [];
+  
+  // Título
+  data.push(['MANIFIESTO DE IMPORTACIÓN - CONTROL DE VEHÍCULOS']);
+  data.push([`Fecha: ${new Date().toLocaleDateString()}`]);
+  data.push([`Total de vehículos: ${rows.length}`]);
+  data.push([]);
+  
+  // Cabeceras
+  data.push(['#', 'Consignatario', 'Marca y Modelo', 'VIN / Chasis', 'Año', 'Color']);
   
   const groups = {};
   rows.forEach(r => {
@@ -2056,55 +2034,97 @@ exportBtn.addEventListener('click', () => {
     groups[key].push(r);
   });
   
+  let rowNum = 0;
   Object.keys(groups).forEach(blKey => {
     const groupRows = groups[blKey];
     const first = groupRows[0];
-    groupRows.forEach((r, idx) => {
+    
+    // Fila de grupo (como en el PDF)
+    const groupLabel = `B/L: ${blKey}  |  Consignatario: ${first.consignatario || '—'}  |  Barco: ${first.vessel || '—'}  |  Fecha: ${first.fecha || '—'}`;
+    data.push([groupLabel, '', '', '', '', '']);
+    
+    groupRows.forEach((r) => {
+      rowNum++;
       let vinInfo = '';
       if(r.vinDecoded && r.vinDecoded.brand) {
         const parts = [];
         if(r.vinDecoded.brand) parts.push(r.vinDecoded.brand);
         if(r.vinDecoded.model) parts.push(r.vinDecoded.model);
         if(r.vinDecoded.year) parts.push(r.vinDecoded.year);
-        if(r.vinDecoded.country) parts.push(r.vinDecoded.country);
-        vinInfo = parts.join(' · ');
+        vinInfo = parts.join(' ');
       }
-      aoa.push([
-        idx === 0 ? blKey : '',
-        idx === 0 ? (first.consignatario || '—') : '',
-        idx === 0 ? (first.vessel || '—') : '',
-        idx === 0 ? (first.fecha || '—') : '',
-        idx + 1,
+      data.push([
+        rowNum,
+        r.consignatario || '—',
         r.marcaModelo || '—',
         r.vin || '—',
         r.anio || '—',
-        r.color || '—',
-        vinInfo
+        r.color || '—'
       ]);
     });
-    aoa.push([]);
+    data.push([]); // Línea en blanco entre grupos
   });
-
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  
+  // Ajustar anchos de columnas
   ws['!cols'] = [
-    {wch:15},{wch:25},{wch:20},{wch:14},{wch:5},
-    {wch:30},{wch:20},{wch:8},{wch:14},{wch:40}
+    {wch:5},   // #
+    {wch:30},  // Consignatario
+    {wch:30},  // Marca y Modelo
+    {wch:22},  // VIN
+    {wch:8},   // Año
+    {wch:14}   // Color
   ];
   
+  // Fusionar celdas del título
   ws['!merges'] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } },
-    { s: { r: 2, c: 0 }, e: { r: 2, c: 9 } }
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 5 } }
   ];
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Vehículos');
-  const today = new Date().toISOString().slice(0,10);
+  
+  // Estilos - aplicar colores a las filas de grupo
+  // Nota: XLSX no soporta estilos nativamente, pero podemos aplicar formato condicional en Excel
+  // Para esto, agregamos un comentario en la celda para identificación
+  
+  XLSX.utils.book_append_sheet(wb, ws, 'Manifiesto');
+  
+  // ===== HOJA 2: Resumen por BL =====
+  const resumenData = [
+    ['RESUMEN POR B/L'],
+    [`Fecha: ${new Date().toLocaleDateString()}`],
+    [],
+    ['B/L', 'Consignatario', 'Barco', 'Fecha', 'Cantidad', 'VINs']
+  ];
+  
+  Object.keys(groups).forEach(blKey => {
+    const groupRows = groups[blKey];
+    const first = groupRows[0];
+    const vins = groupRows.map(r => r.vin || '(sin VIN)').join(', ');
+    resumenData.push([
+      blKey,
+      first.consignatario || '—',
+      first.vessel || '—',
+      first.fecha || '—',
+      groupRows.length,
+      vins
+    ]);
+  });
+  
+  const ws2 = XLSX.utils.aoa_to_sheet(resumenData);
+  ws2['!cols'] = [{wch:18},{wch:30},{wch:20},{wch:14},{wch:12},{wch:50}];
+  ws2['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }
+  ];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Resumen');
+  
   XLSX.writeFile(wb, `manifiesto-vehiculos-${today}.xlsx`);
   logMsg(`📊 Excel exportado: manifiesto-vehiculos-${today}.xlsx`, 'ok');
 });
 
-// ============ REPORTE PDF ============
+// ============ EXPORTAR PDF ============
 exportPdfBtn.addEventListener('click', () => {
   if(rows.length === 0) return;
   
@@ -2131,7 +2151,7 @@ exportPdfBtn.addEventListener('click', () => {
     Object.keys(groups).forEach(blKey => {
       const groupRows = groups[blKey];
       const first = groupRows[0];
-      tableData.push([`B/L: ${blKey} | Consignatario: ${first.consignatario || '—'} | Barco: ${first.vessel || '—'} | Fecha: ${first.fecha || '—'}`, '', '', '', '', '', '']);
+      tableData.push([`B/L: ${blKey} | Consignatario: ${first.consignatario || '—'} | Barco: ${first.vessel || '—'} | Fecha: ${first.fecha || '—'}`, '', '', '', '', '']);
       groupRows.forEach((r, idx) => {
         let vinInfo = '';
         if(r.vinDecoded && r.vinDecoded.brand) {
@@ -2139,20 +2159,19 @@ exportPdfBtn.addEventListener('click', () => {
         }
         tableData.push([
           String(idx + 1),
+          r.consignatario || '—',
           r.marcaModelo || '—',
           r.vin || '—',
           r.anio || '—',
-          r.color || '—',
-          r.consignatario || '—',
-          vinInfo || '—'
+          r.color || '—'
         ]);
       });
-      tableData.push(['', '', '', '', '', '', '']);
+      tableData.push(['', '', '', '', '', '']);
     });
     
     doc.autoTable({
       startY: 40,
-      head: [['#', 'Marca/Modelo', 'VIN', 'Año', 'Color', 'Consignatario', 'Info VIN']],
+      head: [['#', 'Consignatario', 'Marca/Modelo', 'VIN', 'Año', 'Color']],
       body: tableData,
       theme: 'grid',
       styles: { fontSize: 7, cellPadding: 2 },
@@ -2161,10 +2180,9 @@ exportPdfBtn.addEventListener('click', () => {
         0: { cellWidth: 8 },
         1: { cellWidth: 30 },
         2: { cellWidth: 32 },
-        3: { cellWidth: 12 },
-        4: { cellWidth: 16 },
-        5: { cellWidth: 28 },
-        6: { cellWidth: 28 }
+        3: { cellWidth: 34 },
+        4: { cellWidth: 12 },
+        5: { cellWidth: 16 }
       },
       margin: { top: 38, left: 10, right: 10 },
       didParseCell: function(data) {
@@ -2172,7 +2190,7 @@ exportPdfBtn.addEventListener('click', () => {
           data.cell.styles.fillColor = [15, 59, 60];
           data.cell.styles.textColor = [255, 255, 255];
           data.cell.styles.fontStyle = 'bold';
-          data.cell.colSpan = 7;
+          data.cell.colSpan = 6;
         }
       }
     });
@@ -2184,141 +2202,6 @@ exportPdfBtn.addEventListener('click', () => {
     logMsg(`❌ Error exportando PDF: ${e.message}`, 'err');
     console.error(e);
   }
-});
-
-// ============ REPORTE COMPLETO ============
-exportCompletoBtn.addEventListener('click', () => {
-  if(rows.length === 0) return;
-  
-  const wb = XLSX.utils.book_new();
-  const today = new Date().toISOString().slice(0,10);
-  
-  // ===== HOJA 1: Resumen General =====
-  const groups = {};
-  rows.forEach(r => {
-    const key = r.bl || 'Sin B/L';
-    if(!groups[key]) groups[key] = [];
-    groups[key].push(r);
-  });
-  
-  const resumenData = [
-    ['RESUMEN GENERAL DE IMPORTACIÓN'],
-    [`Fecha: ${new Date().toLocaleDateString()}`],
-    [],
-    ['B/L', 'Consignatario', 'Barco', 'Fecha', 'Cantidad', 'VINs', 'Marcas/Modelos']
-  ];
-  
-  Object.keys(groups).forEach(blKey => {
-    const groupRows = groups[blKey];
-    const first = groupRows[0];
-    const vins = groupRows.map(r => r.vin || '(sin VIN)').join(', ');
-    const marcas = groupRows.map(r => r.marcaModelo || '—').join('; ');
-    resumenData.push([
-      blKey,
-      first.consignatario || '—',
-      first.vessel || '—',
-      first.fecha || '—',
-      groupRows.length,
-      vins,
-      marcas
-    ]);
-  });
-  
-  const ws1 = XLSX.utils.aoa_to_sheet(resumenData);
-  ws1['!cols'] = [{wch:18},{wch:28},{wch:20},{wch:14},{wch:12},{wch:50},{wch:50}];
-  ws1['!merges'] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }
-  ];
-  XLSX.utils.book_append_sheet(wb, ws1, 'Resumen');
-  
-  // ===== HOJA 2: Detalle de Vehículos =====
-  const detalleData = [
-    ['DETALLE DE VEHÍCULOS'],
-    [`Total: ${rows.length} vehículos`],
-    [],
-    ['B/L', 'Consignatario', 'Barco', 'Fecha', '#', 'Marca y Modelo', 'VIN', 'Año', 'Color', 'Info VIN']
-  ];
-  
-  Object.keys(groups).forEach(blKey => {
-    const groupRows = groups[blKey];
-    const first = groupRows[0];
-    groupRows.forEach((r, idx) => {
-      let vinInfo = '';
-      if(r.vinDecoded && r.vinDecoded.brand) {
-        const parts = [];
-        if(r.vinDecoded.brand) parts.push(r.vinDecoded.brand);
-        if(r.vinDecoded.model) parts.push(r.vinDecoded.model);
-        if(r.vinDecoded.year) parts.push(r.vinDecoded.year);
-        if(r.vinDecoded.country) parts.push(r.vinDecoded.country);
-        vinInfo = parts.join(' · ');
-      }
-      detalleData.push([
-        idx === 0 ? blKey : '',
-        idx === 0 ? (first.consignatario || '—') : '',
-        idx === 0 ? (first.vessel || '—') : '',
-        idx === 0 ? (first.fecha || '—') : '',
-        idx + 1,
-        r.marcaModelo || '—',
-        r.vin || '—',
-        r.anio || '—',
-        r.color || '—',
-        vinInfo
-      ]);
-    });
-    detalleData.push([]);
-  });
-  
-  const ws2 = XLSX.utils.aoa_to_sheet(detalleData);
-  ws2['!cols'] = [
-    {wch:18},{wch:28},{wch:20},{wch:14},{wch:5},
-    {wch:30},{wch:20},{wch:8},{wch:14},{wch:40}
-  ];
-  ws2['!merges'] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } }
-  ];
-  XLSX.utils.book_append_sheet(wb, ws2, 'Detalle');
-  
-  // ===== HOJA 3: Análisis por Marca =====
-  const marcaData = [
-    ['ANÁLISIS POR MARCA'],
-    [`Fecha: ${new Date().toLocaleDateString()}`],
-    [],
-    ['Marca', 'Cantidad', 'Modelos', 'VINs']
-  ];
-  
-  const marcaGroups = {};
-  rows.forEach(r => {
-    let marca = 'Desconocida';
-    if(r.vinDecoded && r.vinDecoded.brand) {
-      marca = r.vinDecoded.brand;
-    } else if(r.marcaModelo) {
-      // Intentar extraer marca del modelo
-      const found = BRANDS.find(b => r.marcaModelo.toUpperCase().includes(b.toUpperCase()));
-      if(found) marca = found;
-    }
-    if(!marcaGroups[marca]) marcaGroups[marca] = [];
-    marcaGroups[marca].push(r);
-  });
-  
-  Object.keys(marcaGroups).sort().forEach(marca => {
-    const items = marcaGroups[marca];
-    const modelos = [...new Set(items.map(r => r.marcaModelo || '—'))].join('; ');
-    const vins = items.map(r => r.vin || '—').join(', ');
-    marcaData.push([marca, items.length, modelos, vins]);
-  });
-  
-  const ws3 = XLSX.utils.aoa_to_sheet(marcaData);
-  ws3['!cols'] = [{wch:20},{wch:12},{wch:50},{wch:50}];
-  ws3['!merges'] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }
-  ];
-  XLSX.utils.book_append_sheet(wb, ws3, 'Por Marca');
-  
-  XLSX.writeFile(wb, `reporte-completo-vehiculos-${today}.xlsx`);
-  logMsg(`📋 Reporte completo exportado: reporte-completo-vehiculos-${today}.xlsx`, 'ok');
 });
 
 // ============ REPORTE MENSUAL ============
@@ -2359,7 +2242,7 @@ document.getElementById('monthlyReportBtn').addEventListener('click', () => {
   });
 
   const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols'] = [{wch:10},{wch:18},{wch:28},{wch:20},{wch:12},{wch:50},{wch:50}];
+  ws['!cols'] = [{wch:10},{wch:18},{wch:30},{wch:20},{wch:12},{wch:50},{wch:50}];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Reporte Mensual');
   XLSX.writeFile(wb, `reporte-mensual-vehiculos-${new Date().toISOString().slice(0,7)}.xlsx`);
