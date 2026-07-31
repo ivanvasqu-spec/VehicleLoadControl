@@ -25,6 +25,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
+  /* ============ ESTILOS (MANTENIDOS) ============ */
   :root{
     --ink:#0F3B3C;
     --ink-deep:#0A2829;
@@ -206,7 +207,7 @@
     overflow-x:auto;
     box-shadow:0 12px 30px rgba(0,0,0,0.35);
   }
-  table{width:100%;min-width:1100px;border-collapse:collapse;}
+  table{width:100%;min-width:750px;border-collapse:collapse;}
   thead th{
     font-family:'JetBrains Mono',monospace;
     font-size:10px;
@@ -244,15 +245,6 @@
     border-radius:2px;
   }
   td.vin-cell .cell-input{font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;}
-  td.file-cell{
-    color:var(--text-dim);
-    font-size:10.5px;
-    max-width:120px;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-    padding:6px;
-  }
   td.del-cell{text-align:center;padding:0 4px;}
   td.del-cell button{
     background:none;border:none;color:var(--rust);font-size:16px;cursor:pointer;padding:6px;line-height:1;
@@ -290,49 +282,96 @@
     font-size:13.5px;
     font-style:italic;
   }
-  .group-header{
+  .bl-group-header{
     background:var(--ink) !important;
     color:var(--paper) !important;
+  }
+  .bl-group-header td{
+    padding:6px 10px !important;
+    background:var(--ink);
+    color:var(--paper);
+    border-bottom:2px solid var(--brass);
+  }
+  .bl-group-header .bl-info{
     font-family:'JetBrains Mono',monospace;
     font-size:12px;
     font-weight:700;
-    padding:8px 12px !important;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
   }
-  .group-header td{
-    padding:8px 12px !important;
-    background:var(--ink);
-    color:var(--paper);
+  .bl-group-header .bl-info .bl-label{
+    color:var(--brass);
+    font-weight:400;
   }
-  .group-header .cell-input{
-    background:transparent;
-    color:var(--paper);
+  .bl-group-header .bl-info .bl-number{
+    color:#fff;
+    background:rgba(192,138,46,0.2);
+    padding:2px 10px;
+    border-radius:4px;
+    border:1px solid var(--brass);
+  }
+  .bl-group-header .bl-info .field-group{
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .bl-group-header .bl-info .field-group label{
+    font-size:10px;
+    color:var(--brass);
+    font-weight:400;
+  }
+  .bl-group-header .bl-info .field-group input{
+    background:rgba(255,255,255,0.08);
     border:1px solid rgba(255,255,255,0.15);
     border-radius:4px;
-    padding:4px 8px;
-    font-size:12px;
-    width:auto;
+    color:var(--paper);
+    padding:3px 8px;
+    font-size:11px;
+    font-family:'Inter',sans-serif;
+    width:120px;
   }
-  .group-header .cell-input:focus{
-    background:rgba(255,255,255,0.1);
+  .bl-group-header .bl-info .field-group input:focus{
     border-color:var(--brass);
     outline:none;
+    background:rgba(255,255,255,0.15);
   }
-  .group-header .btn-track-summary{
-    background:var(--brass);
-    color:var(--ink-deep);
-    padding:3px 10px;
-    font-size:11px;
+  .bl-group-header .bl-info .field-group input::placeholder{
+    color:rgba(255,255,255,0.3);
   }
-  .group-header .btn-pdf-link{
-    background:var(--brass-dark);
-    color:#fff;
-    padding:2px 8px;
-    font-size:11px;
+  .bl-group-header .bl-info .consignee-field{
+    flex:1;
+    min-width:150px;
+  }
+  .bl-group-header .bl-info .consignee-field input{
+    width:100%;
+    min-width:180px;
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.15);
     border-radius:4px;
-    cursor:pointer;
-    border:none;
+    color:var(--paper);
+    padding:3px 8px;
+    font-size:11px;
+    font-family:'Inter',sans-serif;
   }
-  .group-header .btn-pdf-link:hover{filter:brightness(1.2);}
+  .bl-group-header .bl-info .consignee-field input:focus{
+    border-color:var(--brass);
+    outline:none;
+    background:rgba(255,255,255,0.15);
+  }
+  .bl-group-header .bl-info .consignee-field input::placeholder{
+    color:rgba(255,255,255,0.3);
+  }
+  .bl-group-header .bl-actions{
+    display:flex;
+    gap:6px;
+    margin-left:auto;
+  }
+  .bl-group-header .bl-actions button{
+    font-size:11px;
+    padding:3px 10px;
+  }
   .shipment-card{
     background:var(--paper);
     border-radius:8px;
@@ -444,72 +483,12 @@
     font-family:'JetBrains Mono',monospace;
     font-size:11px;
   }
-  .bl-group-header{
-    background:var(--ink) !important;
-    color:var(--paper) !important;
-  }
-  .bl-group-header td{
-    padding:6px 10px !important;
-    background:var(--ink);
-    color:var(--paper);
-    border-bottom:2px solid var(--brass);
-  }
-  .bl-group-header .bl-info{
+  .vin-decoded-info{
+    font-size:9px;
+    color:var(--brass-dark);
+    display:block;
     font-family:'JetBrains Mono',monospace;
-    font-size:12px;
-    font-weight:700;
-    display:flex;
-    align-items:center;
-    gap:12px;
-    flex-wrap:wrap;
-  }
-  .bl-group-header .bl-info .bl-label{
-    color:var(--brass);
-    font-weight:400;
-  }
-  .bl-group-header .bl-info .bl-number{
-    color:#fff;
-    background:rgba(192,138,46,0.2);
-    padding:2px 10px;
-    border-radius:4px;
-    border:1px solid var(--brass);
-  }
-  .bl-group-header .bl-info .field-group{
-    display:flex;
-    align-items:center;
-    gap:6px;
-  }
-  .bl-group-header .bl-info .field-group label{
-    font-size:10px;
-    color:var(--brass);
-    font-weight:400;
-  }
-  .bl-group-header .bl-info .field-group input{
-    background:rgba(255,255,255,0.08);
-    border:1px solid rgba(255,255,255,0.15);
-    border-radius:4px;
-    color:var(--paper);
-    padding:3px 8px;
-    font-size:11px;
-    font-family:'Inter',sans-serif;
-    width:120px;
-  }
-  .bl-group-header .bl-info .field-group input:focus{
-    border-color:var(--brass);
-    outline:none;
-    background:rgba(255,255,255,0.15);
-  }
-  .bl-group-header .bl-info .field-group input::placeholder{
-    color:rgba(255,255,255,0.3);
-  }
-  .bl-group-header .bl-actions{
-    display:flex;
-    gap:6px;
-    margin-left:auto;
-  }
-  .bl-group-header .bl-actions button{
-    font-size:11px;
-    padding:3px 10px;
+    margin-top:2px;
   }
 </style>
 </head>
@@ -528,7 +507,7 @@
   <header>
     <div class="title-block">
       <h1>Manifiesto de Importación</h1>
-      <div class="sub">Control de Vehículos · Agrupado por B/L</div>
+      <div class="sub">Control de Vehículos · Decodificación VIN</div>
     </div>
     <div class="stamp">FOLIO AUTOMÁTICO<br><b>VIN · MARCA · MODELO · AÑO · BL</b></div>
   </header>
@@ -551,6 +530,7 @@
     <div class="btn-group" style="display:flex;gap:6px;flex-wrap:wrap;">
       <button class="btn-primary" id="exportBtn" disabled>📊 Excel</button>
       <button class="btn-primary" id="exportPdfBtn" disabled style="background:#8B3A2B;">📄 PDF</button>
+      <button class="btn-primary" id="exportCompletoBtn" disabled style="background:var(--ok);">📋 Reporte Completo</button>
       <button class="btn-ghost btn-small" id="monthlyReportBtn">📈 Mensual</button>
       <button class="btn-ghost btn-small" id="pdfPanelBtn">📁 PDFs</button>
       <button class="btn-ghost btn-small" id="addRowBtn">➕ Agregar</button>
@@ -570,11 +550,11 @@
       <thead>
         <tr>
           <th style="width:28px;">#</th>
-          <th style="width:170px;">Marca y Modelo</th>
+          <th style="width:180px;">Consignatario</th>
+          <th style="width:180px;">Marca y Modelo</th>
           <th style="width:170px;">VIN / Chasis</th>
           <th style="width:55px;">Año</th>
           <th style="width:80px;">Color</th>
-          <th style="width:100px;">Archivo</th>
           <th style="width:28px;"></th>
         </tr>
       </thead>
@@ -615,7 +595,684 @@ const CARRIERS = {
   'PABV': { name: 'PIL', url: bl => `https://www.pilship.com/en-tracking/index/index.html?billOfLadingNo=${bl}` },
 };
 
-// ============ FUNCIONES DE EXTRACCIÓN ============
+// ============ DECODIFICACIÓN DE VIN ============
+const VIN_DECODER = {
+  // Mapa de WMI (World Manufacturer Identifier) - primeros 3 caracteres
+  wmi: {
+    'JHM': { brand: 'Honda', country: 'Japón' },
+    'JHL': { brand: 'Honda', country: 'Japón' },
+    'JHN': { brand: 'Honda', country: 'Japón' },
+    'JTH': { brand: 'Lexus', country: 'Japón' },
+    'JTJ': { brand: 'Lexus', country: 'Japón' },
+    'JTM': { brand: 'Toyota', country: 'Japón' },
+    'JTN': { brand: 'Toyota', country: 'Japón' },
+    'JT8': { brand: 'Toyota', country: 'Japón' },
+    'JT9': { brand: 'Toyota', country: 'Japón' },
+    'JTE': { brand: 'Toyota', country: 'Japón' },
+    'JTF': { brand: 'Toyota', country: 'Japón' },
+    'JTG': { brand: 'Toyota', country: 'Japón' },
+    'JTD': { brand: 'Toyota', country: 'Japón' },
+    'JTA': { brand: 'Toyota', country: 'Japón' },
+    'JTB': { brand: 'Toyota', country: 'Japón' },
+    'JTC': { brand: 'Toyota', country: 'Japón' },
+    'JN1': { brand: 'Nissan', country: 'Japón' },
+    'JN6': { brand: 'Nissan', country: 'Japón' },
+    'JN8': { brand: 'Nissan', country: 'Japón' },
+    'JNK': { brand: 'Infiniti', country: 'Japón' },
+    'JNR': { brand: 'Infiniti', country: 'Japón' },
+    'JM1': { brand: 'Mazda', country: 'Japón' },
+    'JM6': { brand: 'Mazda', country: 'Japón' },
+    'JM7': { brand: 'Mazda', country: 'Japón' },
+    'JMZ': { brand: 'Mazda', country: 'Japón' },
+    'JS1': { brand: 'Suzuki', country: 'Japón' },
+    'JS2': { brand: 'Suzuki', country: 'Japón' },
+    'JS3': { brand: 'Suzuki', country: 'Japón' },
+    'JS4': { brand: 'Suzuki', country: 'Japón' },
+    'JSA': { brand: 'Suzuki', country: 'Japón' },
+    'KNA': { brand: 'Kia', country: 'Corea' },
+    'KND': { brand: 'Kia', country: 'Corea' },
+    'KNE': { brand: 'Kia', country: 'Corea' },
+    'KNH': { brand: 'Hyundai', country: 'Corea' },
+    'KMH': { brand: 'Hyundai', country: 'Corea' },
+    'KMJ': { brand: 'Hyundai', country: 'Corea' },
+    'KMT': { brand: 'Genesis', country: 'Corea' },
+    'KMU': { brand: 'Genesis', country: 'Corea' },
+    'KM8': { brand: 'Hyundai', country: 'Corea' },
+    'MNT': { brand: 'Mercedes-Benz', country: 'Alemania' },
+    'WBA': { brand: 'BMW', country: 'Alemania' },
+    'WBS': { brand: 'BMW M', country: 'Alemania' },
+    'WBX': { brand: 'BMW', country: 'Alemania' },
+    'WDB': { brand: 'Mercedes-Benz', country: 'Alemania' },
+    'WDC': { brand: 'Mercedes-Benz', country: 'Alemania' },
+    'WDD': { brand: 'Mercedes-Benz', country: 'Alemania' },
+    'WDF': { brand: 'Mercedes-Benz', country: 'Alemania' },
+    'W1K': { brand: 'Mercedes-Benz', country: 'Alemania' },
+    'WAU': { brand: 'Audi', country: 'Alemania' },
+    'WUA': { brand: 'Audi', country: 'Alemania' },
+    'WVW': { brand: 'Volkswagen', country: 'Alemania' },
+    'WVG': { brand: 'Volkswagen', country: 'Alemania' },
+    'WV1': { brand: 'Volkswagen', country: 'Alemania' },
+    'WV2': { brand: 'Volkswagen', country: 'Alemania' },
+    'WMW': { brand: 'Mini', country: 'Alemania' },
+    'WP0': { brand: 'Porsche', country: 'Alemania' },
+    'WP1': { brand: 'Porsche', country: 'Alemania' },
+    'YV1': { brand: 'Volvo', country: 'Suecia' },
+    'YV4': { brand: 'Volvo', country: 'Suecia' },
+    'YS3': { brand: 'Saab', country: 'Suecia' },
+    'VF1': { brand: 'Renault', country: 'Francia' },
+    'VF3': { brand: 'Peugeot', country: 'Francia' },
+    'VF7': { brand: 'Citroën', country: 'Francia' },
+    'VF8': { brand: 'Matra', country: 'Francia' },
+    'VSK': { brand: 'Renault', country: 'Francia' },
+    '1FA': { brand: 'Ford', country: 'USA' },
+    '1FB': { brand: 'Ford', country: 'USA' },
+    '1FC': { brand: 'Ford', country: 'USA' },
+    '1FM': { brand: 'Ford', country: 'USA' },
+    '1FT': { brand: 'Ford', country: 'USA' },
+    '1FU': { brand: 'Freightliner', country: 'USA' },
+    '1FV': { brand: 'Freightliner', country: 'USA' },
+    '1F9': { brand: 'Ford', country: 'USA' },
+    '1GC': { brand: 'Chevrolet', country: 'USA' },
+    '1GD': { brand: 'GMC', country: 'USA' },
+    '1G1': { brand: 'Chevrolet', country: 'USA' },
+    '1G2': { brand: 'Pontiac', country: 'USA' },
+    '1G3': { brand: 'Oldsmobile', country: 'USA' },
+    '1G4': { brand: 'Buick', country: 'USA' },
+    '1G6': { brand: 'Cadillac', country: 'USA' },
+    '1G8': { brand: 'Saturn', country: 'USA' },
+    '1GY': { brand: 'Cadillac', country: 'USA' },
+    '1HG': { brand: 'Honda', country: 'USA' },
+    '1H6': { brand: 'Honda', country: 'USA' },
+    '1H7': { brand: 'Honda', country: 'USA' },
+    '1J4': { brand: 'Jeep', country: 'USA' },
+    '1J8': { brand: 'Jeep', country: 'USA' },
+    '1LN': { brand: 'Lincoln', country: 'USA' },
+    '1ME': { brand: 'Mercury', country: 'USA' },
+    '1M4': { brand: 'Mercury', country: 'USA' },
+    '1N4': { brand: 'Nissan', country: 'USA' },
+    '1N6': { brand: 'Nissan', country: 'USA' },
+    '1NX': { brand: 'Toyota', country: 'USA' },
+    '1P3': { brand: 'Plymouth', country: 'USA' },
+    '1R9': { brand: 'Roadster', country: 'USA' },
+    '1YV': { brand: 'Mazda', country: 'USA' },
+    '1ZV': { brand: 'Ford', country: 'USA' },
+    '2FA': { brand: 'Ford', country: 'Canadá' },
+    '2FB': { brand: 'Ford', country: 'Canadá' },
+    '2FC': { brand: 'Ford', country: 'Canadá' },
+    '2FM': { brand: 'Ford', country: 'Canadá' },
+    '2FT': { brand: 'Ford', country: 'Canadá' },
+    '2FV': { brand: 'Freightliner', country: 'Canadá' },
+    '2F9': { brand: 'Ford', country: 'Canadá' },
+    '2G1': { brand: 'Chevrolet', country: 'Canadá' },
+    '2G2': { brand: 'Pontiac', country: 'Canadá' },
+    '2G3': { brand: 'Oldsmobile', country: 'Canadá' },
+    '2G4': { brand: 'Buick', country: 'Canadá' },
+    '2G6': { brand: 'Cadillac', country: 'Canadá' },
+    '2G8': { brand: 'Saturn', country: 'Canadá' },
+    '2HK': { brand: 'Honda', country: 'Canadá' },
+    '2HG': { brand: 'Honda', country: 'Canadá' },
+    '2HJ': { brand: 'Honda', country: 'Canadá' },
+    '2HM': { brand: 'Hyundai', country: 'Canadá' },
+    '2M4': { brand: 'Mercury', country: 'Canadá' },
+    '2ME': { brand: 'Mercury', country: 'Canadá' },
+    '2V4': { brand: 'Volkswagen', country: 'Canadá' },
+    '2V8': { brand: 'Volkswagen', country: 'Canadá' },
+    '3FA': { brand: 'Ford', country: 'México' },
+    '3FC': { brand: 'Ford', country: 'México' },
+    '3FM': { brand: 'Ford', country: 'México' },
+    '3FT': { brand: 'Ford', country: 'México' },
+    '3G1': { brand: 'Chevrolet', country: 'México' },
+    '3G2': { brand: 'Pontiac', country: 'México' },
+    '3G3': { brand: 'Oldsmobile', country: 'México' },
+    '3G4': { brand: 'Buick', country: 'México' },
+    '3G6': { brand: 'Cadillac', country: 'México' },
+    '3G8': { brand: 'Saturn', country: 'México' },
+    '3H1': { brand: 'Honda', country: 'México' },
+    '3H2': { brand: 'Honda', country: 'México' },
+    '3H3': { brand: 'Honda', country: 'México' },
+    '3H4': { brand: 'Honda', country: 'México' },
+    '3H5': { brand: 'Honda', country: 'México' },
+    '3H6': { brand: 'Honda', country: 'México' },
+    '3H7': { brand: 'Honda', country: 'México' },
+    '3H8': { brand: 'Honda', country: 'México' },
+    '3HA': { brand: 'Honda', country: 'México' },
+    '3HB': { brand: 'Honda', country: 'México' },
+    '3HC': { brand: 'Honda', country: 'México' },
+    '3HD': { brand: 'Honda', country: 'México' },
+    '3HE': { brand: 'Honda', country: 'México' },
+    '3HF': { brand: 'Honda', country: 'México' },
+    '3HG': { brand: 'Honda', country: 'México' },
+    '3HH': { brand: 'Honda', country: 'México' },
+    '3HJ': { brand: 'Honda', country: 'México' },
+    '3HK': { brand: 'Honda', country: 'México' },
+    '3HL': { brand: 'Honda', country: 'México' },
+    '3HN': { brand: 'Honda', country: 'México' },
+    '3HP': { brand: 'Honda', country: 'México' },
+    '3VW': { brand: 'Volkswagen', country: 'México' },
+    '4F2': { brand: 'Mazda', country: 'USA' },
+    '4F4': { brand: 'Mazda', country: 'USA' },
+    '4F6': { brand: 'Mazda', country: 'USA' },
+    '4JG': { brand: 'Mercedes-Benz', country: 'USA' },
+    '4M2': { brand: 'Mercury', country: 'USA' },
+    '4T1': { brand: 'Toyota', country: 'USA' },
+    '4T3': { brand: 'Toyota', country: 'USA' },
+    '4T4': { brand: 'Toyota', country: 'USA' },
+    '4US': { brand: 'BMW', country: 'USA' },
+    '4UZ': { brand: 'BMW', country: 'USA' },
+    '5FN': { brand: 'Honda', country: 'USA' },
+    '5FP': { brand: 'Honda', country: 'USA' },
+    '5FZ': { brand: 'Honda', country: 'USA' },
+    '5J6': { brand: 'Honda', country: 'USA' },
+    '5KJ': { brand: 'Honda', country: 'USA' },
+    '5L1': { brand: 'Lincoln', country: 'USA' },
+    '5N1': { brand: 'Nissan', country: 'USA' },
+    '5N3': { brand: 'Nissan', country: 'USA' },
+    '5N7': { brand: 'Nissan', country: 'USA' },
+    '5NP': { brand: 'Hyundai', country: 'USA' },
+    '5T1': { brand: 'Toyota', country: 'USA' },
+    '5T2': { brand: 'Toyota', country: 'USA' },
+    '5T3': { brand: 'Toyota', country: 'USA' },
+    '5T4': { brand: 'Toyota', country: 'USA' },
+    '5T6': { brand: 'Toyota', country: 'USA' },
+    '5TD': { brand: 'Toyota', country: 'USA' },
+    '5TE': { brand: 'Toyota', country: 'USA' },
+    '5TF': { brand: 'Toyota', country: 'USA' },
+    '5TG': { brand: 'Toyota', country: 'USA' },
+    '5TH': { brand: 'Toyota', country: 'USA' },
+    '5TJ': { brand: 'Toyota', country: 'USA' },
+    '5TK': { brand: 'Toyota', country: 'USA' },
+    '5TL': { brand: 'Toyota', country: 'USA' },
+    '5TM': { brand: 'Toyota', country: 'USA' },
+    '5TN': { brand: 'Toyota', country: 'USA' },
+    '5TP': { brand: 'Toyota', country: 'USA' },
+    '5TR': { brand: 'Toyota', country: 'USA' },
+    '5TS': { brand: 'Toyota', country: 'USA' },
+    '5TT': { brand: 'Toyota', country: 'USA' },
+    '5TU': { brand: 'Toyota', country: 'USA' },
+    '5TV': { brand: 'Toyota', country: 'USA' },
+    '5TW': { brand: 'Toyota', country: 'USA' },
+    '5TY': { brand: 'Toyota', country: 'USA' },
+    '5TZ': { brand: 'Toyota', country: 'USA' },
+    '5UM': { brand: 'BMW', country: 'USA' },
+    '5UX': { brand: 'BMW', country: 'USA' },
+    '6T1': { brand: 'Toyota', country: 'Australia' },
+    '6T9': { brand: 'Toyota', country: 'Australia' },
+    '7A3': { brand: 'Honda', country: 'Nueva Zelanda' },
+    '7F5': { brand: 'Ford', country: 'Australia' },
+    '8AG': { brand: 'Chevrolet', country: 'Argentina' },
+    '8AP': { brand: 'Fiat', country: 'Argentina' },
+    '8AJ': { brand: 'Toyota', country: 'Argentina' },
+    '8AF': { brand: 'Ford', country: 'Argentina' },
+    '8AD': { brand: 'Peugeot', country: 'Argentina' },
+    '8AC': { brand: 'Honda', country: 'Argentina' },
+    '9BF': { brand: 'Ford', country: 'Brasil' },
+    '9BW': { brand: 'Volkswagen', country: 'Brasil' },
+    '9BD': { brand: 'Fiat', country: 'Brasil' },
+    '9BG': { brand: 'Chevrolet', country: 'Brasil' },
+    '9BR': { brand: 'Toyota', country: 'Brasil' },
+    '9BS': { brand: 'Scania', country: 'Brasil' },
+    'MBH': { brand: 'Suzuki', country: 'India' },
+    'MAJ': { brand: 'Ford', country: 'India' },
+    'MAL': { brand: 'Hyundai', country: 'India' },
+    'MAT': { brand: 'Toyota', country: 'India' },
+    'MA1': { brand: 'Mahindra', country: 'India' },
+    'MA3': { brand: 'Suzuki', country: 'India' },
+    'MA6': { brand: 'Suzuki', country: 'India' },
+    'MA7': { brand: 'Mitsubishi', country: 'India' },
+    'MA8': { brand: 'Suzuki', country: 'India' },
+    'MA9': { brand: 'Toyota', country: 'India' },
+    'MB1': { brand: 'Hyundai', country: 'India' },
+    'MB2': { brand: 'Hyundai', country: 'India' },
+    'MB3': { brand: 'Hyundai', country: 'India' },
+    'MB4': { brand: 'Hyundai', country: 'India' },
+    'MB5': { brand: 'Hyundai', country: 'India' },
+    'MB6': { brand: 'Hyundai', country: 'India' },
+    'MB7': { brand: 'Hyundai', country: 'India' },
+    'MB8': { brand: 'Hyundai', country: 'India' },
+    'MB9': { brand: 'Hyundai', country: 'India' },
+    'MBS': { brand: 'Suzuki', country: 'India' },
+    'MCA': { brand: 'Fiat', country: 'India' },
+    'MCB': { brand: 'Fiat', country: 'India' },
+    'MCC': { brand: 'Fiat', country: 'India' },
+    'MCD': { brand: 'Fiat', country: 'India' },
+    'MCE': { brand: 'Fiat', country: 'India' },
+    'MCF': { brand: 'Fiat', country: 'India' },
+    'MCG': { brand: 'Fiat', country: 'India' },
+    'MCH': { brand: 'Fiat', country: 'India' },
+    'MCI': { brand: 'Fiat', country: 'India' },
+    'MCJ': { brand: 'Fiat', country: 'India' },
+    'MCK': { brand: 'Fiat', country: 'India' },
+    'MCL': { brand: 'Fiat', country: 'India' },
+    'MCM': { brand: 'Fiat', country: 'India' },
+    'MCN': { brand: 'Fiat', country: 'India' },
+    'MCO': { brand: 'Fiat', country: 'India' },
+    'MCP': { brand: 'Fiat', country: 'India' },
+    'MCQ': { brand: 'Fiat', country: 'India' },
+    'MCR': { brand: 'Fiat', country: 'India' },
+    'MCS': { brand: 'Fiat', country: 'India' },
+    'MCT': { brand: 'Fiat', country: 'India' },
+    'MCU': { brand: 'Fiat', country: 'India' },
+    'MCV': { brand: 'Fiat', country: 'India' },
+    'MCW': { brand: 'Fiat', country: 'India' },
+    'MCX': { brand: 'Fiat', country: 'India' },
+    'MCY': { brand: 'Fiat', country: 'India' },
+    'MCZ': { brand: 'Fiat', country: 'India' },
+    'MDA': { brand: 'Suzuki', country: 'India' },
+    'MDB': { brand: 'Suzuki', country: 'India' },
+    'MDC': { brand: 'Suzuki', country: 'India' },
+    'MDD': { brand: 'Suzuki', country: 'India' },
+    'MDE': { brand: 'Suzuki', country: 'India' },
+    'MDF': { brand: 'Suzuki', country: 'India' },
+    'MDG': { brand: 'Suzuki', country: 'India' },
+    'MDH': { brand: 'Suzuki', country: 'India' },
+    'MDI': { brand: 'Suzuki', country: 'India' },
+    'MDJ': { brand: 'Suzuki', country: 'India' },
+    'MDK': { brand: 'Suzuki', country: 'India' },
+    'MDL': { brand: 'Suzuki', country: 'India' },
+    'MDM': { brand: 'Suzuki', country: 'India' },
+    'MDN': { brand: 'Suzuki', country: 'India' },
+    'MDO': { brand: 'Suzuki', country: 'India' },
+    'MDP': { brand: 'Suzuki', country: 'India' },
+    'MDQ': { brand: 'Suzuki', country: 'India' },
+    'MDR': { brand: 'Suzuki', country: 'India' },
+    'MDS': { brand: 'Suzuki', country: 'India' },
+    'MDT': { brand: 'Suzuki', country: 'India' },
+    'MDU': { brand: 'Suzuki', country: 'India' },
+    'MDV': { brand: 'Suzuki', country: 'India' },
+    'MDW': { brand: 'Suzuki', country: 'India' },
+    'MDX': { brand: 'Suzuki', country: 'India' },
+    'MDY': { brand: 'Suzuki', country: 'India' },
+    'MDZ': { brand: 'Suzuki', country: 'India' }
+  },
+
+  // Mapa de años (posición 10 del VIN)
+  years: {
+    'A': 1980, 'B': 1981, 'C': 1982, 'D': 1983, 'E': 1984,
+    'F': 1985, 'G': 1986, 'H': 1987, 'J': 1988, 'K': 1989,
+    'L': 1990, 'M': 1991, 'N': 1992, 'P': 1993, 'R': 1994,
+    'S': 1995, 'T': 1996, 'V': 1997, 'W': 1998, 'X': 1999,
+    'Y': 2000, '1': 2001, '2': 2002, '3': 2003, '4': 2004,
+    '5': 2005, '6': 2006, '7': 2007, '8': 2008, '9': 2009,
+    'A': 2010, 'B': 2011, 'C': 2012, 'D': 2013, 'E': 2014,
+    'F': 2015, 'G': 2016, 'H': 2017, 'J': 2018, 'K': 2019,
+    'L': 2020, 'M': 2021, 'N': 2022, 'P': 2023, 'R': 2024,
+    'S': 2025, 'T': 2026, 'V': 2027, 'W': 2028, 'X': 2029,
+    'Y': 2030
+  },
+
+  // Modelos comunes por marca (posición 4-8)
+  models: {
+    'Toyota': {
+      '4RU': '4Runner',
+      'AB': 'Avalon',
+      'AC': 'Camry',
+      'AH': 'Avalon',
+      'AJ': 'Camry',
+      'AL': 'Camry',
+      'AN': 'Camry',
+      'AP': 'Camry',
+      'AR': 'Avalon',
+      'AS': 'Avalon',
+      'AT': 'Avalon',
+      'AU': 'Avalon',
+      'AV': 'Avalon',
+      'AW': 'Avalon',
+      'AX': 'Avalon',
+      'AY': 'Avalon',
+      'AZ': 'Avalon',
+      'BA': 'Camry',
+      'BB': 'Camry',
+      'BC': 'Camry',
+      'BD': 'Camry',
+      'BE': 'Camry',
+      'BF': 'Camry',
+      'BG': 'Camry',
+      'BH': 'Camry',
+      'BJ': 'Camry',
+      'BK': 'Camry',
+      'BL': 'Camry',
+      'BM': 'Camry',
+      'BN': 'Camry',
+      'BP': 'Camry',
+      'BQ': 'Camry',
+      'BR': 'Camry',
+      'BS': 'Camry',
+      'BT': 'Camry',
+      'BU': 'Camry',
+      'BV': 'Camry',
+      'BW': 'Camry',
+      'BX': 'Camry',
+      'BY': 'Camry',
+      'BZ': 'Camry',
+      'CA': 'Camry',
+      'CB': 'Camry',
+      'CC': 'Camry',
+      'CD': 'Camry',
+      'CE': 'Camry',
+      'CF': 'Camry',
+      'CG': 'Camry',
+      'CH': 'Camry',
+      'CJ': 'Camry',
+      'CK': 'Camry',
+      'CL': 'Camry',
+      'CM': 'Camry',
+      'CN': 'Camry',
+      'CP': 'Camry',
+      'CQ': 'Camry',
+      'CR': 'Camry',
+      'CS': 'Camry',
+      'CT': 'Camry',
+      'CU': 'Camry',
+      'CV': 'Camry',
+      'CW': 'Camry',
+      'CX': 'Camry',
+      'CY': 'Camry',
+      'CZ': 'Camry',
+      'DA': 'Camry',
+      'DB': 'Camry',
+      'DC': 'Camry',
+      'DD': 'Camry',
+      'DE': 'Camry',
+      'DF': 'Camry',
+      'DG': 'Camry',
+      'DH': 'Camry',
+      'DJ': 'Camry',
+      'DK': 'Camry',
+      'DL': 'Camry',
+      'DM': 'Camry',
+      'DN': 'Camry',
+      'DP': 'Camry',
+      'DQ': 'Camry',
+      'DR': 'Camry',
+      'DS': 'Camry',
+      'DT': 'Camry',
+      'DU': 'Camry',
+      'DV': 'Camry',
+      'DW': 'Camry',
+      'DX': 'Camry',
+      'DY': 'Camry',
+      'DZ': 'Camry',
+      'EA': 'Camry',
+      'EB': 'Camry',
+      'EC': 'Camry',
+      'ED': 'Camry',
+      'EE': 'Camry',
+      'EF': 'Camry',
+      'EG': 'Camry',
+      'EH': 'Camry',
+      'EJ': 'Camry',
+      'EK': 'Camry',
+      'EL': 'Camry',
+      'EM': 'Camry',
+      'EN': 'Camry',
+      'EP': 'Camry',
+      'EQ': 'Camry',
+      'ER': 'Camry',
+      'ES': 'Camry',
+      'ET': 'Camry',
+      'EU': 'Camry',
+      'EV': 'Camry',
+      'EW': 'Camry',
+      'EX': 'Camry',
+      'EY': 'Camry',
+      'EZ': 'Camry',
+      'FA': 'Camry',
+      'FB': 'Camry',
+      'FC': 'Camry',
+      'FD': 'Camry',
+      'FE': 'Camry',
+      'FF': 'Camry',
+      'FG': 'Camry',
+      'FH': 'Camry',
+      'FJ': 'Camry',
+      'FK': 'Camry',
+      'FL': 'Camry',
+      'FM': 'Camry',
+      'FN': 'Camry',
+      'FP': 'Camry',
+      'FQ': 'Camry',
+      'FR': 'Camry',
+      'FS': 'Camry',
+      'FT': 'Camry',
+      'FU': 'Camry',
+      'FV': 'Camry',
+      'FW': 'Camry',
+      'FX': 'Camry',
+      'FY': 'Camry',
+      'FZ': 'Camry',
+      'GA': 'Camry',
+      'GB': 'Camry',
+      'GC': 'Camry',
+      'GD': 'Camry',
+      'GE': 'Camry',
+      'GF': 'Camry',
+      'GG': 'Camry',
+      'GH': 'Camry',
+      'GJ': 'Camry',
+      'GK': 'Camry',
+      'GL': 'Camry',
+      'GM': 'Camry',
+      'GN': 'Camry',
+      'GP': 'Camry',
+      'GQ': 'Camry',
+      'GR': 'Camry',
+      'GS': 'Camry',
+      'GT': 'Camry',
+      'GU': 'Camry',
+      'GV': 'Camry',
+      'GW': 'Camry',
+      'GX': 'Camry',
+      'GY': 'Camry',
+      'GZ': 'Camry',
+      'HA': 'Camry',
+      'HB': 'Camry',
+      'HC': 'Camry',
+      'HD': 'Camry',
+      'HE': 'Camry',
+      'HF': 'Camry',
+      'HG': 'Camry',
+      'HH': 'Camry',
+      'HJ': 'Camry',
+      'HK': 'Camry',
+      'HL': 'Camry',
+      'HM': 'Camry',
+      'HN': 'Camry',
+      'HP': 'Camry',
+      'HQ': 'Camry',
+      'HR': 'Camry',
+      'HS': 'Camry',
+      'HT': 'Camry',
+      'HU': 'Camry',
+      'HV': 'Camry',
+      'HW': 'Camry',
+      'HX': 'Camry',
+      'HY': 'Camry',
+      'HZ': 'Camry',
+      'JA': 'Camry',
+      'JB': 'Camry',
+      'JC': 'Camry',
+      'JD': 'Camry',
+      'JE': 'Camry',
+      'JF': 'Camry',
+      'JG': 'Camry',
+      'JH': 'Camry',
+      'JJ': 'Camry',
+      'JK': 'Camry',
+      'JL': 'Camry',
+      'JM': 'Camry',
+      'JN': 'Camry',
+      'JP': 'Camry',
+      'JQ': 'Camry',
+      'JR': 'Camry',
+      'JS': 'Camry',
+      'JT': 'Camry',
+      'JU': 'Camry',
+      'JV': 'Camry',
+      'JW': 'Camry',
+      'JX': 'Camry',
+      'JY': 'Camry',
+      'JZ': 'Camry'
+    },
+    'Honda': {
+      'CV1': 'Accord',
+      'CV2': 'Accord',
+      'CV3': 'Accord',
+      'CV4': 'Accord',
+      'CV5': 'Accord',
+      'CV6': 'Accord',
+      'CV7': 'Accord',
+      'CV8': 'Accord',
+      'CV9': 'Accord',
+      'CW1': 'Accord',
+      'CW2': 'Accord',
+      'CW3': 'Accord',
+      'CW4': 'Accord',
+      'CW5': 'Accord',
+      'CW6': 'Accord',
+      'CW7': 'Accord',
+      'CW8': 'Accord',
+      'CW9': 'Accord',
+      'CX1': 'Accord',
+      'CX2': 'Accord',
+      'CX3': 'Accord',
+      'CX4': 'Accord',
+      'CX5': 'Accord',
+      'CX6': 'Accord',
+      'CX7': 'Accord',
+      'CX8': 'Accord',
+      'CX9': 'Accord',
+      'CY1': 'Accord',
+      'CY2': 'Accord',
+      'CY3': 'Accord',
+      'CY4': 'Accord',
+      'CY5': 'Accord',
+      'CY6': 'Accord',
+      'CY7': 'Accord',
+      'CY8': 'Accord',
+      'CY9': 'Accord',
+      'CZ1': 'Accord',
+      'CZ2': 'Accord',
+      'CZ3': 'Accord',
+      'CZ4': 'Accord',
+      'CZ5': 'Accord',
+      'CZ6': 'Accord',
+      'CZ7': 'Accord',
+      'CZ8': 'Accord',
+      'CZ9': 'Accord'
+    },
+    'Nissan': {
+      'RZ1': 'Altima',
+      'RZ2': 'Altima',
+      'RZ3': 'Altima',
+      'RZ4': 'Altima',
+      'RZ5': 'Altima',
+      'RZ6': 'Altima',
+      'RZ7': 'Altima',
+      'RZ8': 'Altima',
+      'RZ9': 'Altima'
+    }
+  }
+};
+
+function decodeVin(vin){
+  if(!vin || vin.length !== 17) return null;
+  
+  const vinUpper = vin.toUpperCase();
+  const wmi = vinUpper.substring(0, 3);
+  const yearCode = vinUpper.charAt(9);
+  
+  // Decodificar fabricante
+  let brand = '';
+  let country = '';
+  if(VIN_DECODER.wmi[wmi]){
+    brand = VIN_DECODER.wmi[wmi].brand;
+    country = VIN_DECODER.wmi[wmi].country;
+  }
+  
+  // Si no se encuentra en WMI, intentar por marca conocida en los primeros caracteres
+  if(!brand){
+    for(const [key, value] of Object.entries(VIN_DECODER.wmi)){
+      if(vinUpper.startsWith(key)){
+        brand = value.brand;
+        country = value.country;
+        break;
+      }
+    }
+  }
+  
+  // Decodificar año
+  let year = '';
+  if(VIN_DECODER.years[yearCode]){
+    year = String(VIN_DECODER.years[yearCode]);
+  }
+  
+  // Intentar decodificar modelo (posición 4-8)
+  let model = '';
+  const modelCode = vinUpper.substring(3, 8);
+  
+  if(brand && VIN_DECODER.models[brand]){
+    // Buscar coincidencia exacta
+    if(VIN_DECODER.models[brand][modelCode]){
+      model = VIN_DECODER.models[brand][modelCode];
+    } else {
+      // Buscar coincidencia parcial
+      for(const [code, name] of Object.entries(VIN_DECODER.models[brand])){
+        if(modelCode.includes(code) || code.includes(modelCode)){
+          model = name;
+          break;
+        }
+      }
+    }
+  }
+  
+  // Si no se encontró modelo, intentar con el código de modelo (posición 4-8)
+  if(!model && modelCode){
+    // Intentar limpiar el código
+    const cleanCode = modelCode.replace(/[^A-Z0-9]/g, '');
+    if(cleanCode.length >= 2){
+      model = cleanCode;
+    }
+  }
+  
+  // Decodificar tipo de motor/combustible (posición 8)
+  const engineType = vinUpper.charAt(7);
+  let fuelType = '';
+  switch(engineType){
+    case 'B': fuelType = 'Gasolina'; break;
+    case 'C': fuelType = 'Diesel'; break;
+    case 'E': fuelType = 'Eléctrico'; break;
+    case 'H': fuelType = 'Híbrido'; break;
+    case 'L': fuelType = 'Gasolina'; break;
+    case 'N': fuelType = 'Gasolina'; break;
+    case 'P': fuelType = 'Gasolina'; break;
+    case 'R': fuelType = 'Gasolina'; break;
+    case 'S': fuelType = 'Gasolina'; break;
+    case 'T': fuelType = 'Gasolina'; break;
+    case 'U': fuelType = 'Gasolina'; break;
+    case 'V': fuelType = 'Gasolina'; break;
+    case 'W': fuelType = 'Gasolina'; break;
+    case 'X': fuelType = 'Gasolina'; break;
+    case 'Y': fuelType = 'Gasolina'; break;
+    case 'Z': fuelType = 'Gasolina'; break;
+    default: fuelType = '';
+  }
+  
+  return {
+    vin: vinUpper,
+    brand: brand,
+    model: model,
+    year: year,
+    country: country,
+    fuelType: fuelType,
+    wmi: wmi,
+    yearCode: yearCode,
+    modelCode: modelCode,
+    engineType: engineType,
+    fullInfo: `${brand} ${model} ${year}`.trim()
+  };
+}
+
+// ============ FUNCIONES DE EXTRACCIÓN (MANTENIDAS) ============
 function extractBLFromFilename(filename){
   if(!filename) return '';
   const match = filename.match(/^(\d{6,15})/);
@@ -668,12 +1325,12 @@ function extractFecha(text){
 }
 
 const VIN_YEAR_CODES = {
-  'A':[1980,2010],'B':[1981,2011],'C':[1982,2012],'D':[1983,2013],'E':[1984,2014],'F':[1985,2015],
-  'G':[1986,2016],'H':[1987,2017],'J':[1988,2018],'K':[1989,2019],'L':[1990,2020],'M':[1991,2021],
-  'N':[1992,2022],'P':[1993,2023],'R':[1994,2024],'S':[1995,2025],'T':[1996,2026],'V':[1997,2027],
-  'W':[1998,2028],'X':[1999,2029],'Y':[2000,2030],
-  '1':[2001,2031],'2':[2002,2032],'3':[2003,2033],'4':[2004,2034],'5':[2005,2035],
-  '6':[2006,2036],'7':[2007,2037],'8':[2008,2038],'9':[2009,2039]
+  'A':[1980,2010],'B':[1981,2011],'C':[1982,2012],'D':[1983,2013],'E':[1984,2014],
+  'F':[1985,2015],'G':[1986,2016],'H':[1987,2017],'J':[1988,2018],'K':[1989,2019],
+  'L':[1990,2020],'M':[1991,2021],'N':[1992,2022],'P':[1993,2023],'R':[1994,2024],
+  'S':[1995,2025],'T':[1996,2026],'V':[1997,2027],'W':[1998,2028],'X':[1999,2029],
+  'Y':[2000,2030],'1':[2001,2031],'2':[2002,2032],'3':[2003,2033],'4':[2004,2034],
+  '5':[2005,2035],'6':[2006,2036],'7':[2007,2037],'8':[2008,2038],'9':[2009,2039]
 };
 
 function decodeVinYear(vin){
@@ -764,7 +1421,7 @@ async function extractPdfTextWithOCR(file){
   return fullText;
 }
 
-// ============ EXTRACCIÓN DE CAMPOS MEJORADA ============
+// ============ EXTRACCIÓN DE CAMPOS CON DECODIFICACIÓN VIN ============
 function extractFields(text, filename){
   console.log('🔍 === EXTRACT FIELDS ===');
   
@@ -775,7 +1432,7 @@ function extractFields(text, filename){
   
   console.log('📌 Datos básicos:', { consignatario, bl, vessel, fecha });
 
-  // ESTRATEGIA 1: Patrón exacto "2026YM TOYOTA FORTUNER 2.7 WHITE CHASSIS NO: XXX"
+  // ===== ESTRATEGIA 1: Patrón "2026YM TOYOTA FORTUNER 2.7 WHITE CHASSIS NO: XXX" =====
   const vehicleLineRegex = /(\d{4})\s*YM\s+([A-Za-z][A-Za-z\-]*)\s+([\s\S]*?)\s*CHASSIS\s*NO\.?:?\s*([A-HJ-NPR-Z0-9]{17})/gi;
   const vehicleMatches = [...text.matchAll(vehicleLineRegex)];
   console.log('🔎 Estrategia 1 - Matches:', vehicleMatches.length);
@@ -787,35 +1444,37 @@ function extractFields(text, filename){
       const marca = m[2].trim();
       let rest = m[3].trim().replace(/\s+/g, ' ');
       
-      // LIMITAR: Solo tomar hasta el color (máximo 50 caracteres)
       let marcaModelo = marca;
       let color = '';
       
-      // Buscar color al final del texto
       const colorFound = COLORS.find(c => new RegExp(`\\b${c}\\b$`, 'i').test(rest));
       if(colorFound){
         color = colorFound.charAt(0) + colorFound.slice(1).toLowerCase();
-        // Remover el color del resto
         rest = rest.replace(new RegExp(`\\b${colorFound}\\b$`, 'i'), '').trim();
       }
       
-      // Construir marca + modelo (limitado a 50 caracteres)
-      let modeloPart = rest.substring(0, 40); // Tomar solo los primeros 40 caracteres
-      // Si hay un punto o espacio doble, cortar ahí
+      let modeloPart = rest.substring(0, 40);
       const cutPoint = modeloPart.search(/[\.\s]{2,}/);
       if(cutPoint > 0) modeloPart = modeloPart.substring(0, cutPoint);
       
       marcaModelo = [marca, modeloPart].filter(Boolean).join(' ').trim();
-      // Limitar a 50 caracteres total
       if(marcaModelo.length > 50) marcaModelo = marcaModelo.substring(0, 50);
       
       const vin = m[4].toUpperCase();
+      
+      // Decodificar VIN para obtener información adicional
+      const vinInfo = decodeVin(vin);
+      if(vinInfo && vinInfo.brand && !marcaModelo.includes(vinInfo.brand)){
+        // Si la marca del VIN no está en el modelo, agregarla
+        if(!marcaModelo) marcaModelo = vinInfo.fullInfo;
+      }
+      
       console.log(`   🚗 ${vin} | ${marcaModelo} | ${anio} | ${color}`);
-      return { vin, marcaModelo, anio, anioFromVin: false, color, consignatario, bl, vessel, fecha };
+      return { vin, marcaModelo, anio, anioFromVin: false, color, consignatario, bl, vessel, fecha, vinInfo };
     });
   }
 
-  // ESTRATEGIA 2: Buscar VINs sueltos
+  // ===== ESTRATEGIA 2: Buscar VINs sueltos y decodificarlos =====
   const vinRegex = /\b[A-HJ-NPR-Z0-9]{17}\b/gi;
   const vins = [...new Set((text.match(vinRegex) || []).map(v => v.toUpperCase()))];
   console.log('🔎 Estrategia 2 - VINs encontrados:', vins.length);
@@ -828,23 +1487,41 @@ function extractFields(text, filename){
       const vinYear = decodeVinYear(vin);
       if(vinYear){ finalAnio = vinYear; anioFromVin = true; }
       
+      // Decodificar VIN completo
+      const vinInfo = decodeVin(vin);
       let marcaModelo = '';
       let color = '';
+      
+      if(vinInfo && vinInfo.brand){
+        marcaModelo = vinInfo.fullInfo || vinInfo.brand;
+      }
+      
       const contextRegex = new RegExp(`[\\s\\S]{0,100}${vin}[\\s\\S]{0,100}`, 'i');
       const contextMatch = text.match(contextRegex);
       if(contextMatch){
         const ctx = contextMatch[0];
         const brandFound = BRANDS.find(b => new RegExp(`\\b${b.replace('.', '\\.')}\\b`, 'i').test(ctx));
-        if(brandFound) marcaModelo = brandFound;
+        if(brandFound && !marcaModelo.includes(brandFound)) {
+          marcaModelo = brandFound + (marcaModelo ? ' ' + marcaModelo : '');
+        }
         const colorFound = COLORS.find(c => new RegExp(`\\b${c}\\b`, 'i').test(ctx));
         if(colorFound) color = colorFound.charAt(0) + colorFound.slice(1).toLowerCase();
       }
       
-      return { vin, marcaModelo: marcaModelo.substring(0, 50), anio: finalAnio, anioFromVin, color, consignatario, bl, vessel, fecha };
+      // Si no hay marcaModelo aún, usar la información del VIN
+      if(!marcaModelo && vinInfo) {
+        marcaModelo = vinInfo.brand || '';
+        if(vinInfo.model) marcaModelo += ' ' + vinInfo.model;
+        if(vinInfo.year) marcaModelo += ' ' + vinInfo.year;
+      }
+      
+      marcaModelo = marcaModelo.substring(0, 50);
+      
+      return { vin, marcaModelo, anio: finalAnio || vinInfo?.year || '', anioFromVin: true, color, consignatario, bl, vessel, fecha, vinInfo };
     });
   }
 
-  // ESTRATEGIA 3: Buscar "CHASSIS"
+  // ===== ESTRATEGIA 3: Buscar "CHASSIS" =====
   const chassisRegex = /CHASSIS\s*NO\.?:?\s*([A-HJ-NPR-Z0-9]{17})/gi;
   const chassisMatches = [...text.matchAll(chassisRegex)];
   console.log('🔎 Estrategia 3 - Chassis matches:', chassisMatches.length);
@@ -857,7 +1534,12 @@ function extractFields(text, filename){
       let anioFromVin = false;
       const vinYear = decodeVinYear(vin);
       if(vinYear){ finalAnio = vinYear; anioFromVin = true; }
-      return { vin, marcaModelo: '', anio: finalAnio, anioFromVin, color: '', consignatario, bl, vessel, fecha };
+      
+      const vinInfo = decodeVin(vin);
+      let marcaModelo = vinInfo ? vinInfo.fullInfo || vinInfo.brand : '';
+      marcaModelo = marcaModelo.substring(0, 50);
+      
+      return { vin, marcaModelo, anio: finalAnio || vinInfo?.year || '', anioFromVin, color: '', consignatario, bl, vessel, fecha, vinInfo };
     });
   }
 
@@ -871,7 +1553,6 @@ let rowIdCounter = 0;
 let filterText = '';
 const STORAGE_KEY = 'manifiesto-vehiculos-rows-v1';
 let pdfRecords = [];
-let blGroups = {};
 
 function saveRows(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(rows)); } 
@@ -892,6 +1573,7 @@ const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
 const exportBtn = document.getElementById('exportBtn');
 const exportPdfBtn = document.getElementById('exportPdfBtn');
+const exportCompletoBtn = document.getElementById('exportCompletoBtn');
 const countPill = document.getElementById('countPill');
 const searchInput = document.getElementById('searchInput');
 const spinnerOverlay = document.getElementById('spinnerOverlay');
@@ -1025,11 +1707,16 @@ async function handleFiles(fileList){
         extracted.forEach(fields => {
           const newRowData = newRow(file.name, fields);
           if(!newRowData.bl && blForFile) newRowData.bl = blForFile;
+          // Guardar información decodificada del VIN
+          if(fields.vinInfo) {
+            newRowData.vinDecoded = fields.vinInfo;
+          }
           rows.push(newRowData);
         });
         logMsg(`✅ ${file.name}: ${extracted.length} vehículo(s) detectado(s).`, 'ok');
         extracted.forEach((f, idx) => {
-          logMsg(`   🚗 ${idx+1}: ${f.marcaModelo || '—'} | VIN: ${f.vin} | Año: ${f.anio || '—'} | Color: ${f.color || '—'}`, 'ok');
+          const info = f.vinInfo ? ` (${f.vinInfo.brand} ${f.vinInfo.model || ''})` : '';
+          logMsg(`   🚗 ${idx+1}: ${f.marcaModelo || '—'} | VIN: ${f.vin} | Año: ${f.anio || '—'}${info}`, 'ok');
         });
       }
     } catch(err){
@@ -1087,7 +1774,8 @@ function newRow(fileName, fields){
     bl: fields.bl || '',
     vessel: fields.vessel || '',
     fecha: fields.fecha || '',
-    fechaProceso: new Date().toISOString().slice(0, 10)
+    fechaProceso: new Date().toISOString().slice(0, 10),
+    vinDecoded: fields.vinInfo || null
   };
 }
 
@@ -1096,6 +1784,7 @@ function getFilteredRows(){
   if(!filterText.trim()) return rows;
   const lower = filterText.toLowerCase();
   return rows.filter(r => 
+    String(r.consignatario).toLowerCase().includes(lower) ||
     String(r.marcaModelo).toLowerCase().includes(lower) ||
     String(r.vin).toLowerCase().includes(lower) ||
     String(r.anio).toLowerCase().includes(lower) ||
@@ -1116,10 +1805,10 @@ function renderTable(){
     countPill.textContent = rows.length > 0 ? `${rows.length} vehículo${rows.length === 1 ? '' : 's'}` : '';
     exportBtn.disabled = rows.length === 0;
     exportPdfBtn.disabled = rows.length === 0;
+    exportCompletoBtn.disabled = rows.length === 0;
     return;
   }
 
-  // Agrupar por BL
   const groups = {};
   filtered.forEach(row => {
     const key = row.bl || 'Sin B/L';
@@ -1135,11 +1824,9 @@ function renderTable(){
     const groupRows = groups[blKey];
     const firstRow = groupRows[0];
     
-    // === FILA DE CABECERA DEL GRUPO (BL + Barco + Fecha) ===
     const headerTr = document.createElement('tr');
     headerTr.className = 'bl-group-header';
     
-    // Obtener el PDF record para este BL
     const pdfRecord = pdfRecords.find(r => r.bl === blKey);
     const pdfLink = pdfRecord ? `<button class="btn-pdf-link" data-pdf-id="${pdfRecord.id}" title="Ver PDF original">📎</button>` : '';
     
@@ -1148,6 +1835,10 @@ function renderTable(){
         <div class="bl-info">
           <span class="bl-label">📄 B/L:</span>
           <span class="bl-number">${escapeHtml(blKey)}</span>
+          <span class="field-group consignee-field">
+            <label>👤 Consignatario:</label>
+            <input class="cell-input consignatario-input" data-bl="${escapeAttr(blKey)}" value="${escapeAttr(firstRow.consignatario || '')}" placeholder="Ingresar consignatario...">
+          </span>
           <span class="field-group">
             <label>🚢 Barco:</label>
             <input class="cell-input vessel-input" data-bl="${escapeAttr(blKey)}" value="${escapeAttr(firstRow.vessel || '')}" placeholder="Ingresar barco...">
@@ -1166,7 +1857,6 @@ function renderTable(){
     `;
     tbody.appendChild(headerTr);
 
-    // === FILAS DE VEHÍCULOS DEL GRUPO ===
     groupRows.forEach((row) => {
       const tr = document.createElement('tr');
       const isValid = validateVin(row.vin);
@@ -1175,16 +1865,34 @@ function renderTable(){
       const dupBadge = isDuplicate ? '<span class="duplicate-badge">duplicado</span>' : '';
       const highlightClass = isDuplicate ? 'highlight-duplicate' : '';
       
-      // Limitar marcaModelo a 50 caracteres para mostrar
       const displayMarca = (row.marcaModelo || '').substring(0, 50);
+      
+      // Mostrar información decodificada del VIN
+      let vinDecodedInfo = '';
+      if(row.vinDecoded && row.vinDecoded.brand) {
+        const parts = [];
+        if(row.vinDecoded.brand) parts.push(row.vinDecoded.brand);
+        if(row.vinDecoded.model) parts.push(row.vinDecoded.model);
+        if(row.vinDecoded.year) parts.push(row.vinDecoded.year);
+        if(row.vinDecoded.country) parts.push(`🌍${row.vinDecoded.country}`);
+        if(parts.length > 0) {
+          vinDecodedInfo = `<span class="vin-decoded-info">🔍 ${parts.join(' · ')}</span>`;
+        }
+      }
       
       tr.innerHTML = `
         <td style="padding:8px 4px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;font-size:11px;text-align:center;">${rowIndex + 1}</td>
-        <td><input class="cell-input" data-field="marcaModelo" data-id="${row.id}" value="${escapeAttr(displayMarca)}" placeholder="—" maxlength="50"></td>
-        <td class="vin-cell"><input class="cell-input ${highlightClass}" data-field="vin" data-id="${row.id}" value="${escapeAttr(row.vin)}" placeholder="17 caracteres" maxlength="17">${vinWarn}${dupBadge}</td>
+        <td style="color:var(--text-dim);font-size:11px;padding:8px 6px;">${escapeHtml(row.consignatario || '—')}</td>
+        <td>
+          <input class="cell-input" data-field="marcaModelo" data-id="${row.id}" value="${escapeAttr(displayMarca)}" placeholder="—" maxlength="50">
+          ${vinDecodedInfo}
+        </td>
+        <td class="vin-cell">
+          <input class="cell-input ${highlightClass}" data-field="vin" data-id="${row.id}" value="${escapeAttr(row.vin)}" placeholder="17 caracteres" maxlength="17">
+          ${vinWarn}${dupBadge}
+        </td>
         <td><input class="cell-input" data-field="anio" data-id="${row.id}" value="${escapeAttr(row.anio)}" placeholder="—">${row.anioFromVin ? '<span class="warn-badge" style="background:var(--brass-dark);" title="Estimado a partir del VIN">VIN</span>' : ''}</td>
         <td><input class="cell-input" data-field="color" data-id="${row.id}" value="${escapeAttr(row.color)}" placeholder="—"></td>
-        <td class="file-cell" title="${escapeAttr(row.file)}">${escapeHtml(row.file)}</td>
         <td class="del-cell"><button data-id="${row.id}" title="Eliminar fila">✕</button></td>
       `;
       tbody.appendChild(tr);
@@ -1195,36 +1903,55 @@ function renderTable(){
   countPill.textContent = `${rows.length} vehículo${rows.length === 1 ? '' : 's'} registrado${rows.length === 1 ? '' : 's'}${filterText ? ` (${filtered.length} filtrados)` : ''}`;
   exportBtn.disabled = rows.length === 0;
   exportPdfBtn.disabled = rows.length === 0;
+  exportCompletoBtn.disabled = rows.length === 0;
 }
 
 // ============ EVENTOS DE TABLA ============
 tbody.addEventListener('input', e => {
   if(!e.target.matches('.cell-input')) return;
   
-  // Manejar campos de grupo (Barco/Fecha)
-  if(e.target.classList.contains('vessel-input') || e.target.classList.contains('fecha-input')) {
+  if(e.target.classList.contains('consignatario-input') || 
+     e.target.classList.contains('vessel-input') || 
+     e.target.classList.contains('fecha-input')) {
     const bl = e.target.dataset.bl;
-    const field = e.target.classList.contains('vessel-input') ? 'vessel' : 'fecha';
+    let field = '';
+    if(e.target.classList.contains('consignatario-input')) field = 'consignatario';
+    else if(e.target.classList.contains('vessel-input')) field = 'vessel';
+    else if(e.target.classList.contains('fecha-input')) field = 'fecha';
     const value = e.target.value;
-    // Actualizar todas las filas con este BL
     rows.forEach(row => {
       if(row.bl === bl) {
         row[field] = value;
       }
     });
     saveRows();
+    renderTable();
     renderShipmentsSummary();
     return;
   }
   
-  // Manejar campos de vehículo
   const id = Number(e.target.dataset.id);
   const field = e.target.dataset.field;
   const row = rows.find(r => r.id === id);
   if(row){
-    if(field === 'vin') row[field] = e.target.value.toUpperCase();
-    else if(field === 'marcaModelo') {
-      // Limitar a 50 caracteres
+    if(field === 'vin') {
+      const newVin = e.target.value.toUpperCase();
+      row[field] = newVin;
+      // Re-decodificar VIN automáticamente
+      const vinInfo = decodeVin(newVin);
+      if(vinInfo && vinInfo.brand) {
+        row.vinDecoded = vinInfo;
+        // Si no tiene marcaModelo, usar la decodificada
+        if(!row.marcaModelo || row.marcaModelo === '') {
+          row.marcaModelo = vinInfo.fullInfo || vinInfo.brand;
+          if(row.marcaModelo.length > 50) row.marcaModelo = row.marcaModelo.substring(0, 50);
+        }
+        if(!row.anio && vinInfo.year) {
+          row.anio = vinInfo.year;
+          row.anioFromVin = true;
+        }
+      }
+    } else if(field === 'marcaModelo') {
       row[field] = e.target.value.substring(0, 50);
     } else {
       row[field] = e.target.value;
@@ -1236,7 +1963,6 @@ tbody.addEventListener('input', e => {
 });
 
 tbody.addEventListener('click', e => {
-  // Eliminar fila individual
   const delBtn = e.target.closest('td.del-cell button');
   if(delBtn){
     const id = Number(delBtn.dataset.id);
@@ -1249,7 +1975,6 @@ tbody.addEventListener('click', e => {
     return;
   }
   
-  // Eliminar todo un BL
   const delBlBtn = e.target.closest('[data-del-bl]');
   if(delBlBtn){
     const bl = delBlBtn.dataset.delBl;
@@ -1262,7 +1987,6 @@ tbody.addEventListener('click', e => {
     return;
   }
   
-  // Abrir PDF
   const pdfBtn = e.target.closest('.btn-pdf-link');
   if(pdfBtn){
     const pdfId = Number(pdfBtn.dataset.pdfId);
@@ -1275,7 +1999,6 @@ tbody.addEventListener('click', e => {
     return;
   }
   
-  // Rastrear BL
   const trackBtn = e.target.closest('[data-bl]');
   if(trackBtn && trackBtn.classList.contains('btn-track-summary')){
     trackBL(trackBtn.dataset.bl);
@@ -1314,15 +2037,18 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// ============ EXPORTAR A EXCEL ============
+// ============ REPORTE EXCEL ============
 exportBtn.addEventListener('click', () => {
   if(rows.length === 0) return;
   
   const aoa = [
-    ['B/L', 'Barco', 'Fecha', '#', 'Marca y Modelo', 'VIN / Chasis', 'Año', 'Color', 'Archivo']
+    ['MANIFIESTO DE IMPORTACIÓN - CONTROL DE VEHÍCULOS'],
+    [`Fecha de exportación: ${new Date().toLocaleDateString()}`],
+    [`Total de vehículos: ${rows.length}`],
+    [],
+    ['B/L', 'Consignatario', 'Barco', 'Fecha', '#', 'Marca y Modelo', 'VIN / Chasis', 'Año', 'Color', 'Info VIN']
   ];
   
-  // Agrupar por BL para exportar
   const groups = {};
   rows.forEach(r => {
     const key = r.bl || 'Sin B/L';
@@ -1334,8 +2060,18 @@ exportBtn.addEventListener('click', () => {
     const groupRows = groups[blKey];
     const first = groupRows[0];
     groupRows.forEach((r, idx) => {
+      let vinInfo = '';
+      if(r.vinDecoded && r.vinDecoded.brand) {
+        const parts = [];
+        if(r.vinDecoded.brand) parts.push(r.vinDecoded.brand);
+        if(r.vinDecoded.model) parts.push(r.vinDecoded.model);
+        if(r.vinDecoded.year) parts.push(r.vinDecoded.year);
+        if(r.vinDecoded.country) parts.push(r.vinDecoded.country);
+        vinInfo = parts.join(' · ');
+      }
       aoa.push([
         idx === 0 ? blKey : '',
+        idx === 0 ? (first.consignatario || '—') : '',
         idx === 0 ? (first.vessel || '—') : '',
         idx === 0 ? (first.fecha || '—') : '',
         idx + 1,
@@ -1343,27 +2079,32 @@ exportBtn.addEventListener('click', () => {
         r.vin || '—',
         r.anio || '—',
         r.color || '—',
-        r.file || '—'
+        vinInfo
       ]);
     });
-    // Línea en blanco entre grupos
     aoa.push([]);
   });
 
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   ws['!cols'] = [
-    {wch:15},{wch:20},{wch:14},{wch:5},
-    {wch:30},{wch:20},{wch:8},{wch:14},{wch:24}
+    {wch:15},{wch:25},{wch:20},{wch:14},{wch:5},
+    {wch:30},{wch:20},{wch:8},{wch:14},{wch:40}
+  ];
+  
+  ws['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 9 } }
   ];
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Vehículos');
   const today = new Date().toISOString().slice(0,10);
-  XLSX.writeFile(wb, `control-importacion-vehiculos-${today}.xlsx`);
-  logMsg(`📊 Excel exportado`, 'ok');
+  XLSX.writeFile(wb, `manifiesto-vehiculos-${today}.xlsx`);
+  logMsg(`📊 Excel exportado: manifiesto-vehiculos-${today}.xlsx`, 'ok');
 });
 
-// ============ EXPORTAR A PDF ============
+// ============ REPORTE PDF ============
 exportPdfBtn.addEventListener('click', () => {
   if(rows.length === 0) return;
   
@@ -1371,13 +2112,14 @@ exportPdfBtn.addEventListener('click', () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('landscape', 'mm', 'a4');
     
-    doc.setFontSize(16);
-    doc.text('Manifiesto de Importación - Control de Vehículos', 14, 20);
-    doc.setFontSize(10);
+    doc.setFontSize(18);
+    doc.setTextColor(15, 59, 60);
+    doc.text('MANIFIESTO DE IMPORTACIÓN', 14, 20);
+    doc.setFontSize(12);
+    doc.setTextColor(100);
     doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 28);
     doc.text(`Total de vehículos: ${rows.length}`, 14, 34);
     
-    // Agrupar por BL
     const groups = {};
     rows.forEach(r => {
       const key = r.bl || 'Sin B/L';
@@ -1389,27 +2131,28 @@ exportPdfBtn.addEventListener('click', () => {
     Object.keys(groups).forEach(blKey => {
       const groupRows = groups[blKey];
       const first = groupRows[0];
-      // Fila de cabecera del grupo
-      tableData.push([`B/L: ${blKey} | Barco: ${first.vessel || '—'} | Fecha: ${first.fecha || '—'}`, '', '', '', '', '', '', '', '']);
+      tableData.push([`B/L: ${blKey} | Consignatario: ${first.consignatario || '—'} | Barco: ${first.vessel || '—'} | Fecha: ${first.fecha || '—'}`, '', '', '', '', '', '']);
       groupRows.forEach((r, idx) => {
+        let vinInfo = '';
+        if(r.vinDecoded && r.vinDecoded.brand) {
+          vinInfo = `${r.vinDecoded.brand} ${r.vinDecoded.model || ''}`.trim();
+        }
         tableData.push([
           String(idx + 1),
           r.marcaModelo || '—',
           r.vin || '—',
           r.anio || '—',
           r.color || '—',
-          r.bl || '—',
-          r.vessel || '—',
-          r.fecha || '—',
-          r.file || '—'
+          r.consignatario || '—',
+          vinInfo || '—'
         ]);
       });
-      tableData.push(['', '', '', '', '', '', '', '', '']);
+      tableData.push(['', '', '', '', '', '', '']);
     });
     
     doc.autoTable({
       startY: 40,
-      head: [['#', 'Marca/Modelo', 'VIN', 'Año', 'Color', 'B/L', 'Barco', 'Fecha', 'Archivo']],
+      head: [['#', 'Marca/Modelo', 'VIN', 'Año', 'Color', 'Consignatario', 'Info VIN']],
       body: tableData,
       theme: 'grid',
       styles: { fontSize: 7, cellPadding: 2 },
@@ -1420,30 +2163,162 @@ exportPdfBtn.addEventListener('click', () => {
         2: { cellWidth: 32 },
         3: { cellWidth: 12 },
         4: { cellWidth: 16 },
-        5: { cellWidth: 22 },
-        6: { cellWidth: 22 },
-        7: { cellWidth: 18 },
-        8: { cellWidth: 24 }
+        5: { cellWidth: 28 },
+        6: { cellWidth: 28 }
       },
       margin: { top: 38, left: 10, right: 10 },
       didParseCell: function(data) {
-        // Resaltar filas de cabecera de grupo
-        if(data.section === 'body' && data.row.index % 10 === 0 && data.cell.raw && data.cell.raw.startsWith('B/L:')) {
+        if(data.section === 'body' && data.cell.raw && typeof data.cell.raw === 'string' && data.cell.raw.startsWith('B/L:')) {
           data.cell.styles.fillColor = [15, 59, 60];
           data.cell.styles.textColor = [255, 255, 255];
           data.cell.styles.fontStyle = 'bold';
-          data.cell.colSpan = 9;
+          data.cell.colSpan = 7;
         }
       }
     });
     
     const today = new Date().toISOString().slice(0,10);
     doc.save(`manifiesto-vehiculos-${today}.pdf`);
-    logMsg(`📄 PDF exportado`, 'ok');
+    logMsg(`📄 PDF exportado: manifiesto-vehiculos-${today}.pdf`, 'ok');
   } catch(e) {
     logMsg(`❌ Error exportando PDF: ${e.message}`, 'err');
     console.error(e);
   }
+});
+
+// ============ REPORTE COMPLETO ============
+exportCompletoBtn.addEventListener('click', () => {
+  if(rows.length === 0) return;
+  
+  const wb = XLSX.utils.book_new();
+  const today = new Date().toISOString().slice(0,10);
+  
+  // ===== HOJA 1: Resumen General =====
+  const groups = {};
+  rows.forEach(r => {
+    const key = r.bl || 'Sin B/L';
+    if(!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  });
+  
+  const resumenData = [
+    ['RESUMEN GENERAL DE IMPORTACIÓN'],
+    [`Fecha: ${new Date().toLocaleDateString()}`],
+    [],
+    ['B/L', 'Consignatario', 'Barco', 'Fecha', 'Cantidad', 'VINs', 'Marcas/Modelos']
+  ];
+  
+  Object.keys(groups).forEach(blKey => {
+    const groupRows = groups[blKey];
+    const first = groupRows[0];
+    const vins = groupRows.map(r => r.vin || '(sin VIN)').join(', ');
+    const marcas = groupRows.map(r => r.marcaModelo || '—').join('; ');
+    resumenData.push([
+      blKey,
+      first.consignatario || '—',
+      first.vessel || '—',
+      first.fecha || '—',
+      groupRows.length,
+      vins,
+      marcas
+    ]);
+  });
+  
+  const ws1 = XLSX.utils.aoa_to_sheet(resumenData);
+  ws1['!cols'] = [{wch:18},{wch:28},{wch:20},{wch:14},{wch:12},{wch:50},{wch:50}];
+  ws1['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }
+  ];
+  XLSX.utils.book_append_sheet(wb, ws1, 'Resumen');
+  
+  // ===== HOJA 2: Detalle de Vehículos =====
+  const detalleData = [
+    ['DETALLE DE VEHÍCULOS'],
+    [`Total: ${rows.length} vehículos`],
+    [],
+    ['B/L', 'Consignatario', 'Barco', 'Fecha', '#', 'Marca y Modelo', 'VIN', 'Año', 'Color', 'Info VIN']
+  ];
+  
+  Object.keys(groups).forEach(blKey => {
+    const groupRows = groups[blKey];
+    const first = groupRows[0];
+    groupRows.forEach((r, idx) => {
+      let vinInfo = '';
+      if(r.vinDecoded && r.vinDecoded.brand) {
+        const parts = [];
+        if(r.vinDecoded.brand) parts.push(r.vinDecoded.brand);
+        if(r.vinDecoded.model) parts.push(r.vinDecoded.model);
+        if(r.vinDecoded.year) parts.push(r.vinDecoded.year);
+        if(r.vinDecoded.country) parts.push(r.vinDecoded.country);
+        vinInfo = parts.join(' · ');
+      }
+      detalleData.push([
+        idx === 0 ? blKey : '',
+        idx === 0 ? (first.consignatario || '—') : '',
+        idx === 0 ? (first.vessel || '—') : '',
+        idx === 0 ? (first.fecha || '—') : '',
+        idx + 1,
+        r.marcaModelo || '—',
+        r.vin || '—',
+        r.anio || '—',
+        r.color || '—',
+        vinInfo
+      ]);
+    });
+    detalleData.push([]);
+  });
+  
+  const ws2 = XLSX.utils.aoa_to_sheet(detalleData);
+  ws2['!cols'] = [
+    {wch:18},{wch:28},{wch:20},{wch:14},{wch:5},
+    {wch:30},{wch:20},{wch:8},{wch:14},{wch:40}
+  ];
+  ws2['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } }
+  ];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Detalle');
+  
+  // ===== HOJA 3: Análisis por Marca =====
+  const marcaData = [
+    ['ANÁLISIS POR MARCA'],
+    [`Fecha: ${new Date().toLocaleDateString()}`],
+    [],
+    ['Marca', 'Cantidad', 'Modelos', 'VINs']
+  ];
+  
+  const marcaGroups = {};
+  rows.forEach(r => {
+    let marca = 'Desconocida';
+    if(r.vinDecoded && r.vinDecoded.brand) {
+      marca = r.vinDecoded.brand;
+    } else if(r.marcaModelo) {
+      // Intentar extraer marca del modelo
+      const found = BRANDS.find(b => r.marcaModelo.toUpperCase().includes(b.toUpperCase()));
+      if(found) marca = found;
+    }
+    if(!marcaGroups[marca]) marcaGroups[marca] = [];
+    marcaGroups[marca].push(r);
+  });
+  
+  Object.keys(marcaGroups).sort().forEach(marca => {
+    const items = marcaGroups[marca];
+    const modelos = [...new Set(items.map(r => r.marcaModelo || '—'))].join('; ');
+    const vins = items.map(r => r.vin || '—').join(', ');
+    marcaData.push([marca, items.length, modelos, vins]);
+  });
+  
+  const ws3 = XLSX.utils.aoa_to_sheet(marcaData);
+  ws3['!cols'] = [{wch:20},{wch:12},{wch:50},{wch:50}];
+  ws3['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }
+  ];
+  XLSX.utils.book_append_sheet(wb, ws3, 'Por Marca');
+  
+  XLSX.writeFile(wb, `reporte-completo-vehiculos-${today}.xlsx`);
+  logMsg(`📋 Reporte completo exportado: reporte-completo-vehiculos-${today}.xlsx`, 'ok');
 });
 
 // ============ REPORTE MENSUAL ============
@@ -1457,20 +2332,34 @@ document.getElementById('monthlyReportBtn').addEventListener('click', () => {
     const month = (r.fechaProceso || '').slice(0, 7) || 'Sin fecha';
     const blKey = r.bl || 'Sin B/L';
     groups[month] = groups[month] || {};
-    groups[month][blKey] = groups[month][blKey] || { vessel: r.vessel, consignatario: r.consignatario, vins: [] };
+    groups[month][blKey] = groups[month][blKey] || { 
+      vessel: r.vessel, 
+      consignatario: r.consignatario, 
+      vins: [],
+      marcas: []
+    };
     groups[month][blKey].vins.push(r.vin || '(sin VIN)');
+    groups[month][blKey].marcas.push(r.marcaModelo || '—');
   });
 
-  const aoa = [['Mes', 'B/L', 'Barco', 'Consignatario', 'Cantidad', 'VINs']];
+  const aoa = [['Mes', 'B/L', 'Consignatario', 'Barco', 'Cantidad', 'VINs', 'Marcas/Modelos']];
   Object.keys(groups).sort().forEach(month => {
     Object.keys(groups[month]).forEach(bl => {
       const g = groups[month][bl];
-      aoa.push([month, bl, g.vessel || '—', g.consignatario || '—', g.vins.length, g.vins.join(', ')]);
+      aoa.push([
+        month, 
+        bl, 
+        g.consignatario || '—', 
+        g.vessel || '—', 
+        g.vins.length, 
+        g.vins.join(', '),
+        g.marcas.join('; ')
+      ]);
     });
   });
 
   const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols'] = [{wch:10},{wch:18},{wch:20},{wch:28},{wch:12},{wch:70}];
+  ws['!cols'] = [{wch:10},{wch:18},{wch:28},{wch:20},{wch:12},{wch:50},{wch:50}];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Reporte Mensual');
   XLSX.writeFile(wb, `reporte-mensual-vehiculos-${new Date().toISOString().slice(0,7)}.xlsx`);
@@ -1549,7 +2438,14 @@ function renderShipmentsSummary(){
   const groups = {};
   rows.forEach(r => {
     const key = r.bl || 'Sin B/L';
-    if(!groups[key]) groups[key] = { bl: r.bl, vessel: r.vessel, fecha: r.fecha };
+    if(!groups[key]) groups[key] = { 
+      bl: r.bl, 
+      consignatario: r.consignatario, 
+      vessel: r.vessel, 
+      fecha: r.fecha,
+      count: 0
+    };
+    groups[key].count++;
   });
   const keys = Object.keys(groups).filter(k => groups[k].bl && groups[k].bl !== 'Sin B/L');
   if(keys.length === 0){
@@ -1560,10 +2456,11 @@ function renderShipmentsSummary(){
     const g = groups[k];
     return `
       <div class="shipment-card">
-        <div class="line1">🚢 B/L: ${escapeHtml(g.bl)}</div>
+        <div class="line1">🚢 B/L: ${escapeHtml(g.bl)} (${g.count} vehículos)</div>
         <div class="line2">
-          <span>Barco: ${escapeHtml(g.vessel || '—')}</span>
-          <span>Fecha: ${escapeHtml(g.fecha || '—')}</span>
+          <span>👤 Consignatario: ${escapeHtml(g.consignatario || '—')}</span>
+          <span>🚢 Barco: ${escapeHtml(g.vessel || '—')}</span>
+          <span>📅 Fecha: ${escapeHtml(g.fecha || '—')}</span>
           <button class="btn-track-summary" data-bl="${escapeAttr(g.bl)}">🌐 Rastrear</button>
           <button class="btn-track-summary" style="background:var(--brass-dark);" data-view-pdf="${escapeAttr(g.bl)}">📎 Ver PDF</button>
         </div>
@@ -1616,6 +2513,7 @@ async function init(){
   renderTable();
   renderShipmentsSummary();
   logMsg('💡 Listo. Sube un PDF o arrastra archivos al área.', 'info');
+  logMsg('🔍 Decodificación de VIN activada - Los VINs mostrarán marca, modelo y año automáticamente.', 'info');
 }
 
 init();
